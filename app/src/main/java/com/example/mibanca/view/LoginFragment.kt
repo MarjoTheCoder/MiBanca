@@ -66,7 +66,14 @@ class LoginFragment : Fragment() {
         binding.tvGoToRegister.setOnClickListener {
             findNavController().navigate(R.id.action_login_to_register)
         }
+
+        binding.tvForgotPassword.setOnClickListener {
+            findNavController().navigate(
+                R.id.action_login_to_forgotPassword
+            )
+        }
     }
+
 
     private fun setupObservers() {
         authViewModel.loginResult.observe(viewLifecycleOwner) { success ->

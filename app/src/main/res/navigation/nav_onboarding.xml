@@ -13,6 +13,9 @@
         <action
             android:id="@+id/action_login_to_register"
             app:destination="@id/registerFragment" />
+        <action
+            android:id="@+id/action_login_to_forgotPassword"
+            app:destination="@id/forgotPasswordFragment" />
     </fragment>
 
     <fragment
@@ -30,5 +33,11 @@
         android:name="com.example.mibanca.view.PersonalDataFragment"
         android:label="Datos Personales"
         tools:layout="@layout/fragment_personal_data" />
+
+    <fragment
+        android:id="@+id/forgotPasswordFragment"
+        android:name="com.example.mibanca.view.RecoverPasswordFragment"
+        android:label="Recuperar contraseña"
+        tools:layout="@layout/fragment_password" />
 
 </navigation>

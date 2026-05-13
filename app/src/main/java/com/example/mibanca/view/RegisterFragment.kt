@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import com.example.mibanca.R
 import com.example.mibanca.databinding.FragmentRegisterBinding
 import com.example.mibanca.viewmodel.AuthViewModel
@@ -40,8 +41,8 @@ class RegisterFragment : Fragment() {
                 email.isEmpty() || pass.isEmpty() -> {
                     Toast.makeText(requireContext(), "Por favor llena todos los campos", Toast.LENGTH_SHORT).show()
                 }
-                pass.length < 6 -> {
-                    binding.tilPassword.error = "Mínimo 6 caracteres"
+                pass.length < 8 -> {
+                    binding.tilPassword.error = "Mínimo 8 caracteres"
                 }
                 pass != confirmPass -> {
                     binding.tilConfirmPassword.error = "Las contraseñas no coinciden"
@@ -55,17 +56,25 @@ class RegisterFragment : Fragment() {
         }
 
         binding.tvGoToLogin.setOnClickListener {
-            parentFragmentManager.popBackStack()
+            findNavController().navigateUp()
         }
     }
 
     private fun setupObservers() {
         authViewModel.registerResult.observe(viewLifecycleOwner) { success ->
             if (success) {
-                Toast.makeText(requireContext(), "¡Cuenta creada con éxito!", Toast.LENGTH_SHORT).show()
+
+                Toast.makeText(
+                    requireContext(),
+                    "¡Cuenta creada con éxito!",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                findNavController().navigate(
+                    R.id.action_register_to_personalData
+                )
             }
         }
-
         authViewModel.errorMessage.observe(viewLifecycleOwner) { error ->
             error?.let {
                 Toast.makeText(requireContext(), it, Toast.LENGTH_LONG).show()
