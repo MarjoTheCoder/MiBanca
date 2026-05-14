@@ -1,5 +1,6 @@
 package com.example.mibanca.view
 
+import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -8,8 +9,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import com.example.mibanca.HomeActivity
 import com.example.mibanca.databinding.FragmentPersonalDataBinding
+import com.example.mibanca.viewmodel.AuthViewModel
 import com.google.android.material.datepicker.MaterialDatePicker
 import java.text.SimpleDateFormat
 import java.util.*
@@ -18,6 +22,8 @@ class PersonalDataFragment : Fragment() {
 
     private var _binding: FragmentPersonalDataBinding? = null
     private val binding get() = _binding!!
+
+    private lateinit var authViewModel: AuthViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -29,6 +35,8 @@ class PersonalDataFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        authViewModel = ViewModelProvider(this).get(AuthViewModel::class.java)
 
         binding.btnBack.setOnClickListener {
             findNavController().navigateUp()
@@ -49,6 +57,7 @@ class PersonalDataFragment : Fragment() {
 
         binding.btnContinuar.setOnClickListener {
             Toast.makeText(requireContext(), "Perfil completado", Toast.LENGTH_SHORT).show()
+            goToHome()
         }
     }
 
@@ -106,5 +115,12 @@ class PersonalDataFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    private fun goToHome() {
+        val intent = Intent(requireContext(), HomeActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        requireActivity().finish()
     }
 }

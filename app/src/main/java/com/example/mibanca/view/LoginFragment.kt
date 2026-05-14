@@ -11,6 +11,9 @@ import androidx.navigation.fragment.findNavController
 import com.example.mibanca.R
 import com.example.mibanca.databinding.FragmentLoginBinding
 import com.example.mibanca.viewmodel.AuthViewModel
+import android.content.Intent
+import com.example.mibanca.HomeActivity
+
 
 class LoginFragment : Fragment() {
 
@@ -78,8 +81,7 @@ class LoginFragment : Fragment() {
     private fun setupObservers() {
         authViewModel.loginResult.observe(viewLifecycleOwner) { success ->
             if (success) {
-                // Como aún no hay HomeActivity, solo avisamos
-                Toast.makeText(requireContext(), "¡Login Exitoso! (Esperando Home)", Toast.LENGTH_SHORT).show()
+                goToHome()
             }
         }
 
@@ -93,5 +95,13 @@ class LoginFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    private fun goToHome() {
+        val intent = Intent(requireContext(), HomeActivity::class.java)
+
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        requireActivity().finish()
     }
 }

@@ -63,18 +63,10 @@ class RegisterFragment : Fragment() {
     private fun setupObservers() {
         authViewModel.registerResult.observe(viewLifecycleOwner) { success ->
             if (success) {
-
-                Toast.makeText(
-                    requireContext(),
-                    "¡Cuenta creada con éxito!",
-                    Toast.LENGTH_SHORT
-                ).show()
-
-                findNavController().navigate(
-                    R.id.action_register_to_personalData
-                )
+                findNavController().navigate(R.id.action_register_to_personalData)
             }
         }
+
         authViewModel.errorMessage.observe(viewLifecycleOwner) { error ->
             error?.let {
                 Toast.makeText(requireContext(), it, Toast.LENGTH_LONG).show()
