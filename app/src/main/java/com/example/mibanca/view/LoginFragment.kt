@@ -98,10 +98,11 @@ class LoginFragment : Fragment() {
     }
 
     private fun goToHome() {
-        val intent = Intent(requireContext(), HomeActivity::class.java)
-
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        val currentActivity = activity ?: return // Si no hay actividad, no hace nada
+        val intent = Intent(currentActivity, HomeActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
         startActivity(intent)
-        requireActivity().finish()
+        currentActivity.finish()
     }
 }
