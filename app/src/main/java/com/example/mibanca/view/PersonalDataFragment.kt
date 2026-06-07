@@ -15,6 +15,8 @@ import com.example.mibanca.HomeActivity
 import com.example.mibanca.databinding.FragmentPersonalDataBinding
 import com.example.mibanca.viewmodel.AuthViewModel
 import com.google.android.material.datepicker.MaterialDatePicker
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -24,6 +26,10 @@ class PersonalDataFragment : Fragment() {
     private val binding get() = _binding!!
 
     private lateinit var authViewModel: AuthViewModel
+
+    // Instancias de Firebase
+    private val firebaseAuth = FirebaseAuth.getInstance()
+    private val firestore = FirebaseFirestore.getInstance()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -37,10 +43,6 @@ class PersonalDataFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         authViewModel = ViewModelProvider(this).get(AuthViewModel::class.java)
-
-        binding.btnBack.setOnClickListener {
-            findNavController().navigateUp()
-        }
 
         setupListeners()
         setupTextWatchers()
@@ -56,9 +58,50 @@ class PersonalDataFragment : Fragment() {
         }
 
         binding.btnContinuar.setOnClickListener {
-            Toast.makeText(requireContext(), "Perfil completado", Toast.LENGTH_SHORT).show()
-            goToHome()
+            guardarDatosEnFirestore()
         }
+    }
+
+    /**
+     * FUNCIÓN NUEVA: Toma los datos de las cajas de texto y los sube a Cloud Firestore
+     */
+    private fun guardarDatosEnFirestore() {
+        val userId = firebaseAuth.currentUser?.uid
+        if (userId == null) {
+            Toast.makeText(requireContext(), "Error: No hay usuario autenticado", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Deshabilitar botón para evitar múltiples clics mientras se sube a internet
+        binding.btnContinuar.isEnabled = false
+
+        val nombre = binding.etNombre.text.toString().trim()
+        val apellidos = binding.etApellidos.text.toString().trim()
+        val celular = binding.etCelular.text.toString().trim()
+        val fechaNacimiento = binding.etFechaNacimiento.text.toString().trim()
+
+        // Creamos un Diccionario (Map) con la estructura que se guardará en la base de datos
+        val userProfile = hashMapOf(
+            "uid" to userId,
+            "firstName" to nombre,
+            "lastName" to apellidos,
+            "fullName" to "$nombre $apellidos",
+            "phone" to celular,
+            "birthdate" to fechaNacimiento
+        )
+
+        // Guardamos en la colección "users" usando el ID único del usuario como nombre del documento
+        firestore.collection("users")
+            .document(userId)
+            .set(userProfile)
+            .addOnSuccessListener {
+                Toast.makeText(requireContext(), "Perfil completado con éxito", Toast.LENGTH_SHORT).show()
+                goToHome()
+            }
+            .addOnFailureListener { exception ->
+                binding.btnContinuar.isEnabled = true
+                Toast.makeText(requireContext(), "Error al guardar en Firestore: ${exception.message}", Toast.LENGTH_LONG).show()
+            }
     }
 
     private fun showDatePicker() {

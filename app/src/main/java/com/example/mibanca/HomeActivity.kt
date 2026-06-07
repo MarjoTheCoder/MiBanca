@@ -24,7 +24,7 @@ class HomeActivity : AppCompatActivity() {
 
         bottomNav.setupWithNavController(navController)
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.activityHome)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0) // No ponemos padding abajo para que la barra respire
             insets

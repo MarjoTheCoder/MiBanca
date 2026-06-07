@@ -10,6 +10,6 @@
         android:title="Beneficiarios" />
     <item
         android:id="@+id/navigation_cuenta"
-        android:icon="@drawable/ic_person"
+        android:icon="@drawable/ic_avatar_placeholder"
         android:title="Cuenta" />
 </menu>
