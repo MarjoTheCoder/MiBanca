@@ -1,14 +1,231 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".view.HomeFragment">
+    android:fillViewport="true"
+    android:background="#F8FAFC">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:layout_height="wrap_content">
 
-</FrameLayout>
+        <TextView
+            android:id="@+id/tvGreeting"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="16dp"
+            android:text="Hola"
+            android:textSize="14sp"
+            android:textColor="#647488"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <TextView
+            android:id="@+id/tvUserName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:text="María González"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="#0F172A"
+            app:layout_constraintTop_toBottomOf="@id/tvGreeting"
+            app:layout_constraintStart_toStartOf="@id/tvGreeting"
+            app:layout_constraintEnd_toStartOf="@id/imgAvatar" />
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/imgAvatar"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="24dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_avatar_placeholder"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_marginTop="16dp"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardSaldo"
+            android:layout_width="0dp"
+            android:layout_height="156dp"
+            android:layout_marginTop="22dp"
+            android:layout_marginStart="24dp"
+            android:layout_marginEnd="24dp"
+            app:cardCornerRadius="18dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp"
+            app:cardBackgroundColor="#1E40AF"
+            app:layout_constraintTop_toBottomOf="@id/tvUserName"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="20dp">
+
+                <TextView
+                    android:id="@+id/tvSaldoLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Saldo disponible"
+                    android:textColor="#3B82F6"
+                    android:textSize="12sp"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintStart_toStartOf="parent" />
+
+                <TextView
+                    android:id="@+id/tvSaldoMonto"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="$ 12,450.75"
+                    android:textColor="@color/white"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    app:layout_constraintTop_toBottomOf="@id/tvSaldoLabel"
+                    app:layout_constraintStart_toStartOf="parent" />
+
+                <TextView
+                    android:id="@+id/tvCuentaDetalle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="MXN • Cuenta ****8421"
+                    android:textColor="#3B82F6"
+                    android:textSize="10sp"
+                    app:layout_constraintTop_toBottomOf="@id/tvSaldoMonto"
+                    app:layout_constraintStart_toStartOf="parent" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnFondear"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:text="Fondear"
+                    android:textSize="12sp"
+                    android:textColor="#2563EB"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    app:backgroundTint="@color/white"
+                    app:icon="@drawable/ic_arrow_down"
+                    app:iconTint="#2563EB"
+                    app:iconSize="14dp"
+                    app:cornerRadius="16dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/btnTransferir"
+                    android:layout_marginEnd="6dp"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnTransferir"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:text="Transferir"
+                    android:textSize="12sp"
+                    android:textColor="@color/white"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    app:strokeColor="@color/white"
+                    app:strokeWidth="1dp"
+                    app:icon="@drawable/ic_arrow_up"
+                    app:iconTint="@color/white"
+                    app:iconSize="14dp"
+                    app:cornerRadius="16dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/btnFondear"
+                    android:layout_marginStart="6dp" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:id="@+id/tvMovimientosTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:layout_marginStart="24dp"
+            android:text="Movimientos recientes"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#0F172A"
+            app:layout_constraintTop_toBottomOf="@id/cardSaldo"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <TextView
+            android:id="@+id/tvVerTodos"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="24dp"
+            android:text="Ver todos"
+            android:textSize="12sp"
+            android:textColor="#2563EB"
+            android:textStyle="bold"
+            app:layout_constraintBaseline_toBaselineOf="@id/tvMovimientosTitle"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvMovimientos"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginStart="24dp"
+            android:layout_marginEnd="24dp"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            android:orientation="vertical"
+            app:layout_constraintTop_toBottomOf="@id/tvMovimientosTitle"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            tools:listitem="@layout/item_movimiento_mock" />
+
+        <LinearLayout
+            android:id="@+id/layoutEmptyMovimientos"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="48dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginEnd="32dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:visibility="visible"
+            app:layout_constraintTop_toBottomOf="@id/tvMovimientosTitle"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <ImageView
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:src="@drawable/ic_empty_wallet"
+                android:contentDescription="No hay movimientos"
+                app:tint="#647488" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Aún no tienes movimientos"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#0F172A" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Tus transferencias y depósitos aparecerán aquí."
+                android:textSize="12sp"
+                android:textColor="#647488"
+                android:textAlignment="center" />
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

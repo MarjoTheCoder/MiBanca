@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F8FAFC">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/toolbarMonto"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:background="@color/white"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="24dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_back_arrow"
+            android:contentDescription="Regresar"
+            app:tint="#0F172A"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <TextView
+            android:id="@+id/tvToolbarTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Transferir"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#0F172A"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/progressIndicator"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:progress="100"
+        app:trackColor="#E2E8F0"
+        app:indicatorColor="#2563EB"
+        app:trackThickness="4dp"
+        app:trackCornerRadius="2dp"
+        app:layout_constraintTop_toBottomOf="@id/toolbarMonto"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <TextView
+        android:id="@+id/tvStep"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:layout_marginStart="24dp"
+        android:text="Paso 2 de 2 · Monto y concepto"
+        android:textSize="11sp"
+        android:textColor="#647488"
+        android:textStyle="bold"
+        app:layout_constraintTop_toBottomOf="@id/progressIndicator"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardBeneficiarioSeleccionado"
+        android:layout_width="0dp"
+        android:layout_height="64dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?android:attr/selectableItemBackground"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="0dp"
+        app:strokeWidth="0dp"
+        app:cardBackgroundColor="@color/white"
+        app:layout_constraintTop_toBottomOf="@id/tvStep"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/imgAvatar"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="12dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_avatar_placeholder"
+                android:background="#B7D7FB"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <TextView
+                android:id="@+id/tvLabelPara"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_marginTop="12dp"
+                android:text="PARA"
+                android:textSize="10sp"
+                android:textColor="#647488"
+                android:letterSpacing="0.1"
+                android:textStyle="bold"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toEndOf="@id/imgAvatar" />
+
+            <TextView
+                android:id="@+id/tvNombreBeneficiario"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:layout_marginEnd="12dp"
+                android:text="Juan Pérez López"
+                android:textColor="#0F172A"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:maxLines="1"
+                android:ellipsize="end"
+                app:layout_constraintTop_toBottomOf="@id/tvLabelPara"
+                app:layout_constraintStart_toStartOf="@id/tvLabelPara"
+                app:layout_constraintEnd_toStartOf="@id/btnCambiar" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnCambiar"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="12dp"
+                android:text="Cambiar"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="#2563EB"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <TextView
+        android:id="@+id/tvAmountLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:text="¿Cuánto vas a transferir?"
+        android:textColor="#647488"
+        android:textSize="12sp"
+        app:layout_constraintTop_toBottomOf="@id/cardBeneficiarioSeleccionado"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <EditText
+        android:id="@+id/etMonto"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:background="@null"
+        android:hint="$0.00"
+        android:inputType="numberDecimal"
+        android:maxLength="10"
+        android:textColor="#0F172A"
+        android:textSize="46sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        app:layout_constraintTop_toBottomOf="@id/tvAmountLabel"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <TextView
+        android:id="@+id/tvSaldoDisponible"
+        android:layout_width="wrap_content"
+        android:layout_height="32dp"
+        android:layout_marginTop="22dp"
+        android:background="@drawable/bg_pill_success"
+        android:gravity="center"
+        android:paddingHorizontal="16dp"
+        android:text="Saldo disponible: $12,450.75"
+        android:textColor="#108981"
+        android:textSize="13sp"
+        app:drawableStartCompat="@drawable/ic_check_circle"
+        app:drawableTint="#108981"
+        android:drawablePadding="6dp"
+        app:layout_constraintTop_toBottomOf="@id/etMonto"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:background="#DCFCE7" />
+
+    <TextView
+        android:id="@+id/tvSugeridosLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:layout_marginStart="24dp"
+        android:text="Montos sugeridos"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:textColor="#647488"
+        app:layout_constraintTop_toBottomOf="@id/tvSaldoDisponible"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <com.google.android.material.chip.ChipGroup
+        android:id="@+id/chipGroupSugeridos"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        app:singleSelection="true"
+        app:layout_constraintTop_toBottomOf="@id/tvSugeridosLabel"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chip100"
+            style="@style/Widget.MaterialComponents.Chip.Choice"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:text="$500"
+            android:textColor="#475569"
+            android:textSize="13sp"
+            app:chipBackgroundColor="@color/white"
+            app:strokeColor="#E2E8F0"
+            app:strokeWidth="1dp" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chip200"
+            style="@style/Widget.MaterialComponents.Chip.Choice"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:text="$1000"
+            android:textColor="#475569"
+            android:textSize="13sp"
+            app:chipBackgroundColor="@color/white"
+            app:strokeColor="#E2E8F0"
+            app:strokeWidth="1dp" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chip500"
+            style="@style/Widget.MaterialComponents.Chip.Choice"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:text="$1,500"
+            android:textColor="#475569"
+            android:textSize="13sp"
+            app:chipBackgroundColor="@color/white"
+            app:strokeColor="#E2E8F0"
+            app:strokeWidth="1dp" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chip1000"
+            style="@style/Widget.MaterialComponents.Chip.Choice"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:text="$5,000"
+            android:textColor="#475569"
+            android:textSize="13sp"
+            app:chipBackgroundColor="@color/white"
+            app:strokeColor="#E2E8F0"
+            app:strokeWidth="1dp" />
+    </com.google.android.material.chip.ChipGroup>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilConcepto"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="28dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:hint="Concepto (Opcional)"
+        app:counterEnabled="true"
+        app:counterMaxLength="50"
+        app:boxCornerRadiusTopStart="12dp"
+        app:boxCornerRadiusTopEnd="12dp"
+        app:boxCornerRadiusBottomStart="12dp"
+        app:boxCornerRadiusBottomEnd="12dp"
+        app:layout_constraintTop_toBottomOf="@id/chipGroupSugeridos"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etConcepto"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:inputType="textShortMessage"
+            android:textSize="14sp"
+            android:textColor="#0F172A" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnTransferir"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:layout_marginBottom="12dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:text="Transferir $0.00"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@color/white"
+        android:enabled="false"
+        app:cornerRadius="12dp"
+        app:backgroundTint="#2563EB"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

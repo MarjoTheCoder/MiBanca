@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="64dp"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:background="@color/white">
+
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/imgIconoMovimiento"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="#F1F5F9"
+        android:padding="8dp"
+        android:src="@drawable/ic_arrow_down"
+        app:tint="#2563EB"
+        app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/tvDescripcionMovimiento"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:text="Depósito recibido"
+        android:textColor="#0F172A"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:ellipsize="end"
+        android:maxLines="1"
+        app:layout_constraintTop_toTopOf="@id/imgIconoMovimiento"
+        app:layout_constraintBottom_toTopOf="@id/tvFechaMovimiento"
+        app:layout_constraintStart_toEndOf="@id/imgIconoMovimiento"
+        app:layout_constraintEnd_toStartOf="@id/tvMontoMovimiento" />
+
+    <TextView
+        android:id="@+id/tvFechaMovimiento"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Hoy, 3:45 PM"
+        android:textColor="#647488"
+        android:textSize="12sp"
+        app:layout_constraintTop_toBottomOf="@id/tvDescripcionMovimiento"
+        app:layout_constraintBottom_toBottomOf="@id/imgIconoMovimiento"
+        app:layout_constraintStart_toStartOf="@id/tvDescripcionMovimiento"
+        app:layout_constraintEnd_toEndOf="@id/tvDescripcionMovimiento" />
+
+    <TextView
+        android:id="@+id/tvMontoMovimiento"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="+$1,200.00"
+        android:textColor="#108981"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:textColor="#108981" />
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:background="#E2E8F0"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="@id/tvDescripcionMovimiento"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

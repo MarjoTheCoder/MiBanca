@@ -2,12 +2,12 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/main"
+    android:id="@+id/activityHome"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#F8FAFC">
 
-    <fragment
+    <androidx.fragment.app.FragmentContainerView
         android:id="@+id/nav_host_fragment_home"
         android:name="androidx.navigation.fragment.NavHostFragment"
         android:layout_width="0dp"
