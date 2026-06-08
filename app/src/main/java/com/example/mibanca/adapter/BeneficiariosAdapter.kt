@@ -7,7 +7,7 @@ import com.example.mibanca.databinding.ItemBeneficiarioBinding
 import com.example.mibanca.model.Beneficiary
 
 class BeneficiariosAdapter(
-    private val lista: List<Beneficiary>,
+    private var lista: MutableList<Beneficiary>,
     private val onCentinelaClick: (Beneficiary) -> Unit
 ) : RecyclerView.Adapter<BeneficiariosAdapter.ViewHolder>() {
 
@@ -20,6 +20,7 @@ class BeneficiariosAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = lista[position]
+
         holder.binding.tvNombre.text = "${item.name} ${item.lastName}"
 
         val bancoReal = item.bankName ?: "Banco"
@@ -34,6 +35,11 @@ class BeneficiariosAdapter(
             onCentinelaClick(item)
         }
     }
-
     override fun getItemCount(): Int = lista.size
+
+    fun filtrarLista(nuevaListaFiltrada: List<Beneficiary>) {
+        this.lista = nuevaListaFiltrada.toMutableList()
+        notifyDataSetChanged() // Refresca visualmente el RecyclerView
+    }
+
 }

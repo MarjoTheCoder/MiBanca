@@ -14,9 +14,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.example.mibanca.adapter.BeneficiariosAdapter
+import android.text.TextWatcher
+import android.text.Editable
 class BeneficiariosFragment : Fragment() {
     private var _binding: FragmentBeneficiariosBinding? = null
     private val binding get() = _binding!!
+
+    private val listaCompleta = mutableListOf<Beneficiary>()
+    private lateinit var beneficiariosAdapter: BeneficiariosAdapter
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?): View {
         _binding = FragmentBeneficiariosBinding.inflate(inflater, container, false)
@@ -29,6 +34,7 @@ class BeneficiariosFragment : Fragment() {
         binding.btnAddBeneficiario.setOnClickListener { irAFormulario(null) }
         binding.btnAgregarPrimero.setOnClickListener { irAFormulario(null) }
 
+        configurarBuscador()
         cargarBeneficiariosDesdeAPI()
     }
 
@@ -38,22 +44,79 @@ class BeneficiariosFragment : Fragment() {
                 val response = withContext(Dispatchers.IO) {
                     com.example.mibanca.di.NetworkModule.apiService.getBeneficiaries()
                 }
-                if (response.isSuccessful && !response.body().isNullOrEmpty()) {
+
+                val datosApi = response.body()
+                if (response.isSuccessful && !datosApi.isNullOrEmpty()) {
                     binding.rvBeneficiarios.visibility = View.VISIBLE
                     binding.layoutEmptyBeneficiarios.visibility = View.GONE
 
-                    binding.rvBeneficiarios.adapter = BeneficiariosAdapter(response.body()!!) { click ->
+                    listaCompleta.clear()
+                    listaCompleta.addAll(datosApi)
+
+                    beneficiariosAdapter = BeneficiariosAdapter(datosApi.toMutableList()) { click ->
                         irAFormulario(click)
                     }
+                    binding.rvBeneficiarios.adapter = beneficiariosAdapter
+
+                    binding.etSearch.text?.clear()
+
                 } else {
-                    binding.rvBeneficiarios.visibility = View.GONE
-                    binding.layoutEmptyBeneficiarios.visibility = View.VISIBLE
+                    mostrarPantallaVacia()
                 }
             } catch (e: Exception) {
-                binding.rvBeneficiarios.visibility = View.GONE
-                binding.layoutEmptyBeneficiarios.visibility = View.VISIBLE
+                mostrarPantallaVacia()
             }
         }
+    }
+
+    private fun configurarBuscador() {
+        binding.etSearch.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                val textoBuscado = s.toString().trim().lowercase()
+                realizarFiltrado(textoBuscado)
+            }
+            override fun afterTextChanged(s: Editable?) {}
+        })
+    }
+
+    private fun realizarFiltrado(query: String) {
+        if (!::beneficiariosAdapter.isInitialized) return
+
+        if (query.isEmpty()) {
+            // Si se borra el texto, regresamos la lista original guardada en memoria
+            beneficiariosAdapter.filtrarLista(listaCompleta)
+            binding.rvBeneficiarios.visibility = View.VISIBLE
+            binding.layoutEmptyBeneficiarios.visibility = View.GONE
+            return
+        }
+
+        val listaFiltrada = listaCompleta.filter { beneficiario ->
+            val nombre = beneficiario.name.orEmpty().lowercase()
+            val apellido = beneficiario.lastName.orEmpty().lowercase()
+            val alias = beneficiario.alias.orEmpty().lowercase()
+            val banco = beneficiario.bankName.orEmpty().lowercase()
+
+            nombre.contains(query) ||
+                    apellido.contains(query) ||
+                    alias.contains(query) ||
+                    banco.contains(query)
+        }
+
+        beneficiariosAdapter.filtrarLista(listaFiltrada)
+
+        if (listaFiltrada.isEmpty()) {
+            binding.rvBeneficiarios.visibility = View.GONE
+            binding.layoutEmptyBeneficiarios.visibility = View.VISIBLE
+        } else {
+            binding.rvBeneficiarios.visibility = View.VISIBLE
+            binding.layoutEmptyBeneficiarios.visibility = View.GONE
+        }
+    }
+
+    private fun mostrarPantallaVacia() {
+        binding.rvBeneficiarios.visibility = View.GONE
+        binding.layoutEmptyBeneficiarios.visibility = View.VISIBLE
     }
 
     private fun irAFormulario(beneficiario: Beneficiary?) {
@@ -61,5 +124,8 @@ class BeneficiariosFragment : Fragment() {
         findNavController().navigate(R.id.fragment_registro_beneficiario, bundle)
     }
 
-    override fun onDestroyView() { super.onDestroyView(); _binding = null }
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
 }
