@@ -1,4 +1,4 @@
-package com.curso.mibanca.model
+package com.example.mibanca.model
 
 import com.google.gson.annotations.SerializedName
 

@@ -19,6 +19,9 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class PersonalDataFragment : Fragment() {
 
@@ -62,17 +65,12 @@ class PersonalDataFragment : Fragment() {
         }
     }
 
-    /**
-     * FUNCIÓN NUEVA: Toma los datos de las cajas de texto y los sube a Cloud Firestore
-     */
     private fun guardarDatosEnFirestore() {
         val userId = firebaseAuth.currentUser?.uid
         if (userId == null) {
             Toast.makeText(requireContext(), "Error: No hay usuario autenticado", Toast.LENGTH_SHORT).show()
             return
         }
-
-        // Deshabilitar botón para evitar múltiples clics mientras se sube a internet
         binding.btnContinuar.isEnabled = false
 
         val nombre = binding.etNombre.text.toString().trim()
@@ -80,7 +78,6 @@ class PersonalDataFragment : Fragment() {
         val celular = binding.etCelular.text.toString().trim()
         val fechaNacimiento = binding.etFechaNacimiento.text.toString().trim()
 
-        // Creamos un Diccionario (Map) con la estructura que se guardará en la base de datos
         val userProfile = hashMapOf(
             "uid" to userId,
             "firstName" to nombre,
@@ -90,17 +87,35 @@ class PersonalDataFragment : Fragment() {
             "birthdate" to fechaNacimiento
         )
 
-        // Guardamos en la colección "users" usando el ID único del usuario como nombre del documento
         firestore.collection("users")
             .document(userId)
             .set(userProfile)
             .addOnSuccessListener {
-                Toast.makeText(requireContext(), "Perfil completado con éxito", Toast.LENGTH_SHORT).show()
-                goToHome()
+                viewLifecycleOwner.lifecycleScope.launch {
+                    try {
+                        val response = withContext(kotlinx.coroutines.Dispatchers.IO) {
+                            com.example.mibanca.di.NetworkModule.apiService.createAccount()
+                        }
+
+                        if (response.isSuccessful) {
+                            Toast.makeText(requireContext(), "¡Cuenta bancaria creada en Cloud Functions!", Toast.LENGTH_SHORT).show()
+                            goToHome()
+                        } else if (response.code() == 409) {
+                            Toast.makeText(requireContext(), "Aviso: Ya posees una cuenta activa.", Toast.LENGTH_LONG).show()
+                            goToHome()
+                        } else {
+                            binding.btnContinuar.isEnabled = true
+                            Toast.makeText(requireContext(), "Error API (${response.code()})", Toast.LENGTH_SHORT).show()
+                        }
+                    } catch (e: Exception) {
+                        binding.btnContinuar.isEnabled = true
+                        Toast.makeText(requireContext(), "Error de conexión: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
             .addOnFailureListener { exception ->
                 binding.btnContinuar.isEnabled = true
-                Toast.makeText(requireContext(), "Error al guardar en Firestore: ${exception.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(requireContext(), "Error en Firestore: ${exception.message}", Toast.LENGTH_LONG).show()
             }
     }
 

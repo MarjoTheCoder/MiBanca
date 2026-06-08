@@ -1,7 +1,7 @@
-package com.curso.mibanca.di
+package com.example.mibanca.di
 
-import com.curso.mibanca.network.AuthInterceptor
-import com.curso.mibanca.network.BankApiService
+import com.example.mibanca.network.AuthInterceptor
+import com.example.mibanca.network.BankApiService
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory

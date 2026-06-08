@@ -1,10 +1,10 @@
-package com.curso.mibanca.data.repository
+package com.example.mibanca.data.repository
 
-import com.curso.mibanca.model.AccountResponse
-import com.curso.mibanca.model.AddBeneficiaryRequest
-import com.curso.mibanca.model.Beneficiary
-import com.curso.mibanca.model.Transaction
-import com.curso.mibanca.network.BankApiService
+import com.example.mibanca.model.AccountResponse
+import com.example.mibanca.model.AddBeneficiaryRequest
+import com.example.mibanca.model.Beneficiary
+import com.example.mibanca.model.Transaction
+import com.example.mibanca.network.BankApiService
 import retrofit2.Response
 
 class BankingRepositoryImpl(
@@ -25,10 +25,12 @@ class BankingRepositoryImpl(
 
     override suspend fun addBeneficiary(
         name: String,
+        lastName: String,
+        alias: String,
         accountNumber: String,
         bankName: String
     ): Response<Beneficiary> {
-        val request = AddBeneficiaryRequest(name, accountNumber, bankName)
+        val request = AddBeneficiaryRequest(name, lastName, alias, accountNumber, bankName)
         return apiService.addBeneficiary(request)
     }
 

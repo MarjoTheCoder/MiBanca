@@ -1,4 +1,4 @@
-package com.curso.mibanca.network
+package com.example.mibanca.network
 
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.runBlocking

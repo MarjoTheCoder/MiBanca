@@ -15,7 +15,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import com.curso.mibanca.network.BankApiService
 import com.example.mibanca.R
 import com.example.mibanca.databinding.FragmentCuentaBinding
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -23,20 +22,16 @@ import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 import com.bumptech.glide.Glide
 
 class CuentaFragment : Fragment() {
 
     private var _binding: FragmentCuentaBinding? = null
     private val binding get() = _binding!!
-
     private val firebaseAuth = FirebaseAuth.getInstance()
-    private lateinit var apiService: BankApiService
 
 
-    // 1. Lanzador para abrir la Galería de fotos del teléfono
+    //Abrir la Galería de fotos del teléfono
     private val abrirGaleriaLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -45,7 +40,7 @@ class CuentaFragment : Fragment() {
         }
     }
 
-    // 2. Lanzador para solicitar los permisos de la Galería
+    // Solicitar los permisos de la Galería
     private val permisoGaleriaLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { esConcedido ->
@@ -56,16 +51,30 @@ class CuentaFragment : Fragment() {
         }
     }
 
-    // 3. Lanzador para solicitar el permiso de la Cámara
+    // Solicitar el permiso de la Cámara
     private val permisoCamaraLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { esConcedido ->
         if (esConcedido) {
-            Toast.makeText(requireContext(), "Permiso concedido. Aquí lanzarías la cámara.", Toast.LENGTH_SHORT).show()
-            // Nota académica: Para tomar fotos reales de la cámara y guardarlas se requiere un FileProvider.
-            // Con abrir la galería y cargar la imagen real, cumples excelentemente el entregable.
+            tomarFotoLauncher.launch(null)
         } else {
             Toast.makeText(requireContext(), "Permiso de cámara denegado", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    //Lanzador para abrir la cámara nativa y recibir la foto tomada
+    private val tomarFotoLauncher = registerForActivityResult(
+        ActivityResultContracts.TakePicturePreview()
+    ) { bitmap: android.graphics.Bitmap? ->
+        if (bitmap != null) {
+            Glide.with(this)
+                .load(bitmap)
+                .placeholder(R.drawable.ic_avatar_placeholder)
+                .error(R.drawable.ic_avatar_placeholder)
+                .circleCrop()
+                .into(binding.imgAvatar)
+        } else {
+            Toast.makeText(requireContext(), "No se tomó ninguna fotografía", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -79,13 +88,6 @@ class CuentaFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        val retrofit = Retrofit.Builder()
-            .baseUrl("https://6661df276300c55614909a9d.mockapi.io/api/v1/")
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-
-        apiService = retrofit.create(BankApiService::class.java)
 
         cargarDatosDeUsuario()
 
@@ -134,13 +136,17 @@ class CuentaFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val response = withContext(Dispatchers.IO) { apiService.getAccount() }
+                val response = withContext(Dispatchers.IO) {
+                    com.example.mibanca.di.NetworkModule.apiService.getAccount()
+                }
                 if (response.isSuccessful && response.body() != null) {
                     val account = response.body()!!
                     binding.tvTitle.text = "Mi cuenta (${account.getFormattedBalance()})"
+                } else {
+                    Toast.makeText(requireContext(), "Error API (${response.code()}): No se obtuvo el saldo", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                Toast.makeText(requireContext(), "Error de red: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Error de red al conectar al servidor: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -177,7 +183,7 @@ class CuentaFragment : Fragment() {
     }
 
     private fun verificarYPedirPermisoGaleria() {
-        // Determinar qué permiso pedir dependiendo de la versión de Android instalada en el cel
+        // Determina qué permiso pedir dependiendo de la versión de Android instalada en el cel
         val permisoNecesario = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             Manifest.permission.READ_MEDIA_IMAGES // Android 13+
         } else {
@@ -194,10 +200,10 @@ class CuentaFragment : Fragment() {
     }
 
     private fun verificarYPedirPermisoCamara() {
-        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(requireContext(), "Permiso de cámara ya concedido", Toast.LENGTH_SHORT).show()
+        if (ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            tomarFotoLauncher.launch(null)
         } else {
-            permisoCamaraLauncher.launch(Manifest.permission.CAMERA)
+            permisoCamaraLauncher.launch(android.Manifest.permission.CAMERA)
         }
     }
 

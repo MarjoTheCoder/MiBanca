@@ -60,4 +60,10 @@
             android:defaultValue="@null" />
     </fragment>
 
+    <fragment
+        android:id="@+id/fragment_registro_beneficiario"
+        android:name="com.example.mibanca.view.RegistroBeneficiarioFragment"
+        android:label="Formulario Beneficiario"
+        tools:layout="@layout/fragment_registro_beneficiario" />
+
 </navigation>
