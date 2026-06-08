@@ -48,4 +48,12 @@ class BankingRepositoryImpl(
         )
         return apiService.makeTransfer(body)
     }
+
+    override suspend fun updateBeneficiary(id: String, request: AddBeneficiaryRequest): Response<Beneficiary> {
+        return com.example.mibanca.di.NetworkModule.apiService.updateBeneficiary(id, request)
+    }
+
+    override suspend fun deleteBeneficiary(id: String): Response<Unit> {
+        return com.example.mibanca.di.NetworkModule.apiService.deleteBeneficiary(id)
+    }
 }

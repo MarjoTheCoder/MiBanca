@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.example.mibanca.data.repository.BankingRepository // Importación añadida
 import com.example.mibanca.databinding.FragmentRegistroBeneficiarioBinding
 import com.example.mibanca.model.AddBeneficiaryRequest
 import com.example.mibanca.model.Beneficiary
@@ -19,6 +20,10 @@ class RegistroBeneficiarioFragment : Fragment() {
     private var _binding: FragmentRegistroBeneficiarioBinding? = null
     private val binding get() = _binding!!
     private var datosRecibidos: Beneficiary? = null
+
+    private val repository: BankingRepository = com.example.mibanca.data.repository.BankingRepositoryImpl(
+        com.example.mibanca.di.NetworkModule.apiService
+    )
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?): View {
         _binding = FragmentRegistroBeneficiarioBinding.inflate(inflater, container, false)
@@ -32,7 +37,7 @@ class RegistroBeneficiarioFragment : Fragment() {
         datosRecibidos = arguments?.getSerializable("KEY_BENEFICIARIO") as? Beneficiary
 
         if (datosRecibidos != null) {
-            //LECTURA / EDICIÓN
+            // LECTURA / EDICIÓN
             binding.tvFormTitle.text = "Detalle del Beneficiario"
             binding.etNombreBeneficiario.setText(datosRecibidos!!.name)
             binding.etApellidoBeneficiario.setText(datosRecibidos!!.lastName)
@@ -55,12 +60,15 @@ class RegistroBeneficiarioFragment : Fragment() {
 
                 viewLifecycleOwner.lifecycleScope.launch {
                     try {
+                        // REPARADO: Ahora llama a la capa del repositorio
                         val res = withContext(Dispatchers.IO) {
-                            com.example.mibanca.di.NetworkModule.apiService.updateBeneficiary(datosRecibidos!!.id, request)
+                            repository.updateBeneficiary(datosRecibidos!!.id, request)
                         }
                         if (res.isSuccessful) {
                             Toast.makeText(requireContext(), "¡Información actualizada!", Toast.LENGTH_SHORT).show()
                             findNavController().navigateUp() // Regresa a la lista
+                        } else {
+                            Toast.makeText(requireContext(), "Error del servidor al actualizar", Toast.LENGTH_SHORT).show()
                         }
                     } catch (e: Exception) {
                         Toast.makeText(requireContext(), "Error al actualizar", Toast.LENGTH_SHORT).show()
@@ -71,12 +79,15 @@ class RegistroBeneficiarioFragment : Fragment() {
             binding.btnEliminarBeneficiario.setOnClickListener {
                 viewLifecycleOwner.lifecycleScope.launch {
                     try {
+                        // REPARADO: Ahora llama a la capa del repositorio
                         val res = withContext(Dispatchers.IO) {
-                            com.example.mibanca.di.NetworkModule.apiService.deleteBeneficiary(datosRecibidos!!.id)
+                            repository.deleteBeneficiary(datosRecibidos!!.id)
                         }
                         if (res.isSuccessful) {
                             Toast.makeText(requireContext(), "¡Beneficiario eliminado!", Toast.LENGTH_SHORT).show()
                             findNavController().navigateUp() // Regresa a la lista
+                        } else {
+                            Toast.makeText(requireContext(), "Error del servidor al eliminar", Toast.LENGTH_SHORT).show()
                         }
                     } catch (e: Exception) {
                         Toast.makeText(requireContext(), "Error al eliminar", Toast.LENGTH_SHORT).show()
@@ -84,7 +95,7 @@ class RegistroBeneficiarioFragment : Fragment() {
                 }
             }
         } else {
-            //CREACIÓN
+            // CREACIÓN
             binding.tvFormTitle.text = "Nuevo Beneficiario"
             binding.btnGuardarBeneficiario.text = "Guardar beneficiario"
             binding.btnEliminarBeneficiario.visibility = View.GONE
@@ -105,12 +116,18 @@ class RegistroBeneficiarioFragment : Fragment() {
             return
         }
 
-        val request = AddBeneficiaryRequest(name = nom, lastName = ape, alias = ali, accountNumber = cue , bankName = ban)
-
         viewLifecycleOwner.lifecycleScope.launch {
             try {
+                // REPARADO: Se adapta a la firma de 'addBeneficiary' declarada en tu BankingRepository
+                // pasándole los parámetros sueltos en lugar del objeto Request completo.
                 val res = withContext(Dispatchers.IO) {
-                    com.example.mibanca.di.NetworkModule.apiService.addBeneficiary(request)
+                    repository.addBeneficiary(
+                        name = nom,
+                        lastName = ape,
+                        alias = ali,
+                        accountNumber = cue,
+                        bankName = ban
+                    )
                 }
                 if (res.isSuccessful) {
                     Toast.makeText(requireContext(), "¡Beneficiario Agregado!", Toast.LENGTH_SHORT).show()
@@ -126,5 +143,8 @@ class RegistroBeneficiarioFragment : Fragment() {
         }
     }
 
-    override fun onDestroyView() { super.onDestroyView(); _binding = null }
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
 }

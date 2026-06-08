@@ -1,60 +1,150 @@
 package com.example.mibanca.view
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
-import android.view.View
+import         android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import com.example.mibanca.R
+import com.example.mibanca.databinding.FragmentTransferirMontoBinding
+import com.example.mibanca.viewmodel.BankingViewModel
+import com.example.mibanca.viewmodel.OperationUiState
+import kotlinx.coroutines.launch
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [TransferirMontoFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class TransferirMontoFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
+    private var _binding: FragmentTransferirMontoBinding? = null
+    private val binding get() = _binding!!
+
+    private var beneficiaryId: String? = null
+
+    private val viewModel: BankingViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_transferir_monto, container, false)
+    ): View {
+        _binding = FragmentTransferirMontoBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment TransferirMontoFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            TransferirMontoFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        beneficiaryId = arguments?.getString("beneficiaryId")
+
+        configurarComponentesVisuales()
+        configurarChipsSugeridos()
+        configurarLogicaMonto()
+        observarViewModel()
+
+        binding.btnBack.setOnClickListener { findNavController().navigateUp() }
+        binding.btnCambiar.setOnClickListener { findNavController().navigateUp() }
+
+        binding.btnTransferir.setOnClickListener {
+            ejecutarFlujoTransferencia()
+        }
+    }
+
+    private fun observarViewModel() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.uiState.collect { state ->
+                when (state) {
+                    is OperationUiState.Idle -> {
+                        // Estado base pasivo
+                    }
+                    is OperationUiState.Loading -> {
+                        // Se activa el indicador de carga diseñado por Lisset
+                        binding.progressIndicator.visibility = View.VISIBLE
+                        binding.btnTransferir.isEnabled = false
+                        binding.btnTransferir.text = "Procesando..."
+                    }
+                    is OperationUiState.Success -> {
+                        binding.progressIndicator.visibility = View.GONE
+                        Toast.makeText(requireContext(), "¡Transferencia realizada con éxito!", Toast.LENGTH_LONG).show()
+                        viewModel.resetState()
+                        findNavController().popBackStack(R.id.navigation_home, false)
+                    }
+                    is OperationUiState.Error -> {
+                        binding.progressIndicator.visibility = View.GONE
+                        Toast.makeText(requireContext(), state.message, Toast.LENGTH_LONG).show()
+
+                        // Restauramos el botón con el monto actual en pantalla
+                        val montoText = binding.etMonto.text.toString().trim()
+                        val montoDouble = montoText.toDoubleOrNull() ?: 0.0
+                        binding.btnTransferir.isEnabled = montoDouble > 0
+                        binding.btnTransferir.text = String.format("Transferir $%.2f", montoDouble)
+
+                        viewModel.resetState()
+                    }
                 }
             }
+        }
+    }
+
+    private fun configurarComponentesVisuales() {
+        binding.tvNombreBeneficiario.text = "Beneficiario verificado"
+        binding.tvSaldoDisponible.text = "Saldo disponible: $12,450.75"
+        binding.progressIndicator.visibility = View.GONE // Oculto inicialmente
+    }
+
+    private fun configurarChipsSugeridos() {
+        binding.chip100.setOnClickListener { binding.etMonto.setText("500"); binding.chipGroupSugeridos.clearCheck() }
+        binding.chip200.setOnClickListener { binding.etMonto.setText("1000"); binding.chipGroupSugeridos.clearCheck() }
+        binding.chip500.setOnClickListener { binding.etMonto.setText("1500"); binding.chipGroupSugeridos.clearCheck() }
+        binding.chip1000.setOnClickListener { binding.etMonto.setText("5000"); binding.chipGroupSugeridos.clearCheck() }
+    }
+
+    private fun configurarLogicaMonto() {
+        binding.etMonto.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                val montoText = s.toString().trim()
+                if (montoText.isEmpty()) {
+                    binding.btnTransferir.isEnabled = false
+                    binding.btnTransferir.text = "Transferir $0.00"
+                } else {
+                    val montoDouble = montoText.toDoubleOrNull() ?: 0.0
+                    if (montoDouble > 0) {
+                        binding.btnTransferir.isEnabled = true
+                        binding.btnTransferir.text = String.format("Transferir $%.2f", montoDouble)
+                    } else {
+                        binding.btnTransferir.isEnabled = false
+                        binding.btnTransferir.text = "Transferir $0.00"
+                    }
+                }
+            }
+            override fun afterTextChanged(s: Editable?) {}
+        })
+    }
+
+    private fun ejecutarFlujoTransferencia() {
+        val montoText = binding.etMonto.text.toString().trim()
+        val montoDouble = montoText.toDoubleOrNull() ?: 0.0
+        val amountInCents = (montoDouble * 100).toLong()
+        val concepto = binding.etConcepto.text.toString().trim()
+
+        if (beneficiaryId.isNullOrEmpty()) {
+            Toast.makeText(requireContext(), "Error: No se seleccionó un beneficiario válido", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (amountInCents <= 0) {
+            Toast.makeText(requireContext(), "Por favor ingresa un monto válido", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        viewModel.transferir(beneficiaryId!!, amountInCents, concepto)
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

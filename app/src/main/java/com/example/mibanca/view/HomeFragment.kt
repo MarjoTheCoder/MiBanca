@@ -44,7 +44,7 @@ class HomeFragment : Fragment() {
         }
 
         binding.btnFondear.setOnClickListener {
-            Toast.makeText(requireContext(), "Función de fondeo próximamente", Toast.LENGTH_SHORT).show()
+            findNavController().navigate(R.id.action_navigation_home_to_fondeoFragment)
         }
 
         binding.tvVerTodos.setOnClickListener {
