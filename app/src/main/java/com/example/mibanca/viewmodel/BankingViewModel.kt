@@ -50,17 +50,20 @@ class BankingViewModel(
         }
     }
 
-    // Método para mover dinero
     fun transferir(targetAccountId: String, amountInCents: Long, concepto: String) {
         viewModelScope.launch {
             _uiState.value = OperationUiState.Loading
             try {
-                val response = repository.makeTransfer(targetAccountId, amountInCents)
+                // 🌟 CORREGIDO: Ahora sí le pasamos el concepto como tercer argumento al repositorio
+                val response = repository.makeTransfer(targetAccountId, amountInCents, concepto)
+
                 if (response.isSuccessful) {
                     _uiState.value = OperationUiState.Success
-                    obtenerDatosDeCuenta() // Actualiza saldo del Home tras transferir
+                    obtenerDatosDeCuenta()
                 } else {
-                    _uiState.value = OperationUiState.Error("Error en el servidor al transferir")
+                    val rawError = response.errorBody()?.string() ?: "Cuerpo de error vacío"
+                    android.util.Log.e("ERROR_SERVER_BANCO", "Código HTTP: ${response.code()} | JSON: $rawError")
+                    _uiState.value = OperationUiState.Error("Error en servidor")
                 }
             } catch (e: Exception) {
                 _uiState.value = OperationUiState.Error("Fallo de red: ${e.message}")

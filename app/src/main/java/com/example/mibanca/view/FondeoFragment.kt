@@ -25,21 +25,19 @@ class FondeoFragment : Fragment(R.layout.fragment_fondeo) {
         val btnConfirmFund = view.findViewById<Button>(R.id.btnConfirmFund)
 
         btnConfirmFund.setOnClickListener {
-            val amountText = etAmount.text.toString()
+            val amountText = etAmount.text.toString().trim()
             if (amountText.isEmpty()) {
                 Toast.makeText(requireContext(), "Por favor ingresa un monto", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            val amountDouble = amountText.toDoubleOrNull() ?: 0.0
-            val amountInCents = (amountDouble * 100).toLong()
+            val amountLong = amountText.toLongOrNull() ?: 0L
 
-            if (amountInCents <= 0) {
+            if (amountLong <= 0) {
                 Toast.makeText(requireContext(), "Monto inválido", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-
-            ejecutarFondeo(amountInCents)
+            ejecutarFondeo(amountLong)
         }
     }
 

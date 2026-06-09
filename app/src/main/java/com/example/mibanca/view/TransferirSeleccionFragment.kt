@@ -47,15 +47,19 @@ class TransferirSeleccionFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        beneficiariosAdapter = BeneficiariosAdapter(mutableListOf()) { beneficiario ->
-            val bundle = Bundle().apply {
-                putString("beneficiaryId", beneficiario.id)
+        beneficiariosAdapter = BeneficiariosAdapter(
+            lista = emptyList(),
+            onElementoClick = { beneficiario ->
+                val bundle = Bundle().apply {
+                    putString("beneficiaryId", beneficiario.id)
+                }
+                findNavController().navigate(R.id.action_transferirSeleccionFragment_to_transferirMontoFragment, bundle)
+            },
+            onMenuMoreClick = { beneficiario ->
+                val bundle = Bundle().apply { putSerializable("KEY_BENEFICIARIO", beneficiario) }
+                findNavController().navigate(R.id.fragment_registro_beneficiario, bundle)
             }
-            findNavController().navigate(
-                R.id.action_transferirSeleccionFragment_to_transferirMontoFragment,
-                bundle
-            )
-        }
+        )
 
         binding.rvBeneficiariosSelector.apply {
             layoutManager = LinearLayoutManager(requireContext())

@@ -7,8 +7,9 @@ import com.example.mibanca.databinding.ItemBeneficiarioBinding
 import com.example.mibanca.model.Beneficiary
 
 class BeneficiariosAdapter(
-    private var lista: MutableList<Beneficiary>,
-    private val onCentinelaClick: (Beneficiary) -> Unit
+    private var lista: List<Beneficiary>,
+    private val onElementoClick: (Beneficiary) -> Unit,
+    private val onMenuMoreClick: (Beneficiary) -> Unit
 ) : RecyclerView.Adapter<BeneficiariosAdapter.ViewHolder>() {
 
     class ViewHolder(val binding: ItemBeneficiarioBinding) : RecyclerView.ViewHolder(binding.root)
@@ -21,25 +22,26 @@ class BeneficiariosAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = lista[position]
 
-        holder.binding.tvNombre.text = "${item.name} ${item.lastName}"
+        val nombreCompleto = "${item.name.orEmpty()} ${item.lastName.orEmpty()}".trim()
+        holder.binding.tvNombre.text = if (nombreCompleto.isEmpty()) "Sin nombre" else nombreCompleto
 
         val bancoReal = item.bankName ?: "Banco"
         val cuentaCorta = item.accountNumber.orEmpty().takeLast(4)
         holder.binding.tvBanco.text = "$bancoReal • **** $cuentaCorta"
 
         holder.binding.root.setOnClickListener {
-            onCentinelaClick(item)
+            onElementoClick(item)
         }
 
         holder.binding.btnMore.setOnClickListener {
-            onCentinelaClick(item)
+            onMenuMoreClick(item)
         }
     }
+
     override fun getItemCount(): Int = lista.size
 
     fun filtrarLista(nuevaListaFiltrada: List<Beneficiary>) {
-        this.lista = nuevaListaFiltrada.toMutableList()
-        notifyDataSetChanged() // Refresca visualmente el RecyclerView
+        this.lista = nuevaListaFiltrada
+        notifyDataSetChanged()
     }
-
 }

@@ -50,15 +50,11 @@ class BeneficiariosFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        beneficiariosAdapter = BeneficiariosAdapter(mutableListOf()) { beneficiario ->
-            val bundle = Bundle().apply {
-                putString("beneficiaryId", beneficiario.id)
-            }
-            findNavController().navigate(
-                R.id.action_beneficiarios_to_transferirMonto,
-                bundle
-            )
-        }
+        beneficiariosAdapter = BeneficiariosAdapter(
+            mutableListOf(),
+            onElementoClick = { beneficiario -> irAFormulario(beneficiario) },
+            onMenuMoreClick = { beneficiario -> irAFormulario(beneficiario) }
+        )
 
         binding.rvBeneficiarios.apply {
             layoutManager = LinearLayoutManager(requireContext())

@@ -91,10 +91,10 @@ class TransferirMontoFragment : Fragment() {
     }
 
     private fun configurarChipsSugeridos() {
-        binding.chip100.setOnClickListener { binding.etMonto.setText("500"); binding.chipGroupSugeridos.clearCheck() }
-        binding.chip200.setOnClickListener { binding.etMonto.setText("1000"); binding.chipGroupSugeridos.clearCheck() }
-        binding.chip500.setOnClickListener { binding.etMonto.setText("1500"); binding.chipGroupSugeridos.clearCheck() }
-        binding.chip1000.setOnClickListener { binding.etMonto.setText("5000"); binding.chipGroupSugeridos.clearCheck() }
+        binding.chip100.setOnClickListener { binding.etMonto.setText("100"); binding.chipGroupSugeridos.clearCheck() }
+        binding.chip200.setOnClickListener { binding.etMonto.setText("200"); binding.chipGroupSugeridos.clearCheck() }
+        binding.chip500.setOnClickListener { binding.etMonto.setText("500"); binding.chipGroupSugeridos.clearCheck() }
+        binding.chip1000.setOnClickListener { binding.etMonto.setText("1000"); binding.chipGroupSugeridos.clearCheck() }
     }
 
     private fun configurarLogicaMonto() {
@@ -122,8 +122,7 @@ class TransferirMontoFragment : Fragment() {
 
     private fun ejecutarFlujoTransferencia() {
         val montoText = binding.etMonto.text.toString().trim()
-        val montoDouble = montoText.toDoubleOrNull() ?: 0.0
-        val amountInCents = (montoDouble * 100).toLong()
+        val amountLong = montoText.toLongOrNull() ?: 0L
         val concepto = binding.etConcepto.text.toString().trim()
 
         if (beneficiaryId.isNullOrEmpty()) {
@@ -131,12 +130,12 @@ class TransferirMontoFragment : Fragment() {
             return
         }
 
-        if (amountInCents <= 0) {
+        if (amountLong <= 0) {
             Toast.makeText(requireContext(), "Por favor ingresa un monto válido", Toast.LENGTH_SHORT).show()
             return
         }
 
-        viewModel.transferir(beneficiaryId!!, amountInCents, concepto)
+        viewModel.transferir(beneficiaryId!!, amountLong, concepto)
     }
 
     override fun onDestroyView() {

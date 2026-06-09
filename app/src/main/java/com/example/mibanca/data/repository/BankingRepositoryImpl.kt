@@ -24,10 +24,11 @@ class BankingRepositoryImpl(
         return apiService.addBeneficiary(request)
     }
 
-    override suspend fun makeTransfer(targetAccountId: String, amountInCents: Long): Response<Unit> {
+    override suspend fun makeTransfer(targetAccountId: String, amountInCents: Long, concepto: String): Response<Unit> {
         val request = TransactionRequest(
             toBeneficiaryId = targetAccountId,
-            amount = amountInCents
+            amount = amountInCents,
+            description = concepto
         )
         return apiService.makeTransfer(request)
     }

@@ -10,6 +10,6 @@ interface BankingRepository {
     suspend fun getAccount(): AccountResponse
     suspend fun getBeneficiaries(): List<Beneficiary>
     suspend fun addBeneficiary(request: AddBeneficiaryRequest): Beneficiary
-    suspend fun makeTransfer(targetAccountId: String, amountInCents: Long): Response<Unit>
+    suspend fun makeTransfer(targetAccountId: String, amountInCents: Long, concepto: String): Response<Unit>
     suspend fun getTransactionHistory(): List<Transaction>
 }
