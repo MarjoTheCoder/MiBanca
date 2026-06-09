@@ -4,6 +4,7 @@ import com.example.mibanca.model.AccountResponse
 import com.example.mibanca.model.AddBeneficiaryRequest
 import com.example.mibanca.model.Beneficiary
 import com.example.mibanca.model.Transaction
+import com.example.mibanca.model.TransactionRequest
 import com.example.mibanca.network.BankApiService
 import retrofit2.Response
 
@@ -11,49 +12,27 @@ class BankingRepositoryImpl(
     private val apiService: BankApiService
 ) : BankingRepository {
 
-    override suspend fun getAccount(): Response<AccountResponse> {
+    override suspend fun getAccount(): AccountResponse {
         return apiService.getAccount()
     }
 
-    override suspend fun createAccount(): Response<AccountResponse> {
-        return apiService.createAccount()
-    }
-
-    override suspend fun getBeneficiaries(): Response<List<Beneficiary>> {
+    override suspend fun getBeneficiaries(): List<Beneficiary> {
         return apiService.getBeneficiaries()
     }
 
-    override suspend fun addBeneficiary(
-        name: String,
-        lastName: String,
-        alias: String,
-        accountNumber: String,
-        bankName: String
-    ): Response<Beneficiary> {
-        val request = AddBeneficiaryRequest(name, lastName, alias, accountNumber, bankName)
+    override suspend fun addBeneficiary(request: AddBeneficiaryRequest): Beneficiary {
         return apiService.addBeneficiary(request)
     }
 
-    override suspend fun getTransactionHistory(): Response<List<Transaction>> {
-        return apiService.getTransactionHistory()
-    }
-
-    override suspend fun makeTransfer(
-        targetAccountId: String,
-        amountInCents: Long
-    ): Response<Transaction> {
-        val body = mapOf(
-            "targetAccountId" to targetAccountId,
-            "amount" to amountInCents
+    override suspend fun makeTransfer(targetAccountId: String, amountInCents: Long): Response<Unit> {
+        val request = TransactionRequest(
+            toBeneficiaryId = targetAccountId,
+            amount = amountInCents
         )
-        return apiService.makeTransfer(body)
+        return apiService.makeTransfer(request)
     }
 
-    override suspend fun updateBeneficiary(id: String, request: AddBeneficiaryRequest): Response<Beneficiary> {
-        return com.example.mibanca.di.NetworkModule.apiService.updateBeneficiary(id, request)
-    }
-
-    override suspend fun deleteBeneficiary(id: String): Response<Unit> {
-        return com.example.mibanca.di.NetworkModule.apiService.deleteBeneficiary(id)
+    override suspend fun getTransactionHistory(): List<Transaction> {
+        return apiService.getTransactionHistory()
     }
 }

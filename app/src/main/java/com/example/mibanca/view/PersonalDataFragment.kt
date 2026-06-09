@@ -92,25 +92,28 @@ class PersonalDataFragment : Fragment() {
             .set(userProfile)
             .addOnSuccessListener {
                 viewLifecycleOwner.lifecycleScope.launch {
-                    try {
-                        val response = withContext(kotlinx.coroutines.Dispatchers.IO) {
-                            com.example.mibanca.di.NetworkModule.apiService.createAccount()
-                        }
-
-                        if (response.isSuccessful) {
-                            Toast.makeText(requireContext(), "¡Cuenta bancaria creada en Cloud Functions!", Toast.LENGTH_SHORT).show()
-                            goToHome()
-                        } else if (response.code() == 409) {
-                            Toast.makeText(requireContext(), "Aviso: Ya posees una cuenta activa.", Toast.LENGTH_LONG).show()
-                            goToHome()
-                        } else {
-                            binding.btnContinuar.isEnabled = true
-                            Toast.makeText(requireContext(), "Error API (${response.code()})", Toast.LENGTH_SHORT).show()
-                        }
-                    } catch (e: Exception) {
-                        binding.btnContinuar.isEnabled = true
-                        Toast.makeText(requireContext(), "Error de conexión: ${e.message}", Toast.LENGTH_SHORT).show()
+                    // SOLUCIÓN COMPLETA: Usamos apiCall para envolver la petición directa.
+                    // Esto elimina por completo los errores de .isSuccessful y .code()
+                    com.example.mibanca.network.apiCall {
+                        com.example.mibanca.di.NetworkModule.apiService.createAccount()
                     }
+                        .onSuccess { account ->
+                            // Si entra aquí, la cuenta bancaria se creó perfectamente por primera vez
+                            Toast.makeText(requireContext(), "¡Cuenta bancaria creada con éxito!", Toast.LENGTH_SHORT).show()
+                            goToHome()
+                        }
+                        .onFailure { error ->
+                            // Si falla, apiCall nos da el error. Evaluamos el mensaje o tipo para saber si es un 409 (Conflict)
+                            // De acuerdo a la guía del profesor, si ya tenía cuenta de una sesión anterior, redirigimos a Home de forma segura.
+                            if (error.message?.contains("409") == true || error.message?.contains("account_exists") == true) {
+                                Toast.makeText(requireContext(), "Aviso: Ya posees una cuenta activa.", Toast.LENGTH_LONG).show()
+                                goToHome()
+                            } else {
+                                // Cualquier otro fallo de red auténtico
+                                binding.btnContinuar.isEnabled = true
+                                Toast.makeText(requireContext(), "Error al crear cuenta: ${error.message}", Toast.LENGTH_LONG).show()
+                            }
+                        }
                 }
             }
             .addOnFailureListener { exception ->
@@ -118,7 +121,6 @@ class PersonalDataFragment : Fragment() {
                 Toast.makeText(requireContext(), "Error en Firestore: ${exception.message}", Toast.LENGTH_LONG).show()
             }
     }
-
     private fun showDatePicker() {
         val picker = MaterialDatePicker.Builder.datePicker()
             .setTitleText("Fecha de nacimiento")

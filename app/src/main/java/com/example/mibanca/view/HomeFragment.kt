@@ -6,15 +6,16 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.mibanca.R
 import com.example.mibanca.databinding.FragmentHomeBinding
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import com.google.firebase.firestore.FirebaseFirestore
+import com.example.mibanca.viewmodel.AccountUiState
+import com.example.mibanca.viewmodel.BankingViewModel
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
@@ -22,6 +23,8 @@ class HomeFragment : Fragment() {
 
     private val firebaseAuth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
+
+    private val viewModel: BankingViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -34,8 +37,11 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        cargarInformacionUsuario()
+        cargarNombreFirestore()
         setupClickListeners()
+        observarEstadoDeCuenta()
+
+        viewModel.obtenerDatosDeCuenta()
     }
 
     private fun setupClickListeners() {
@@ -52,7 +58,7 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun cargarInformacionUsuario() {
+    private fun cargarNombreFirestore() {
         val userId = firebaseAuth.currentUser?.uid ?: return
 
         firestore.collection("users").document(userId)
@@ -68,25 +74,29 @@ class HomeFragment : Fragment() {
             .addOnFailureListener {
                 binding.tvUserName.text = "Bienvenido"
             }
+    }
 
+    private fun observarEstadoDeCuenta() {
         viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                val response = withContext(Dispatchers.IO) {
-                    com.example.mibanca.di.NetworkModule.apiService.getAccount()
-                }
+            viewModel.accountState.collect { state ->
+                when (state) {
+                    is AccountUiState.Loading -> {
+                        binding.tvSaldoMonto.text = "Cargando..."
+                        binding.tvCuentaDetalle.text = "Consultando información..."
+                    }
+                    is AccountUiState.Success -> {
+                        val cuenta = state.account
 
-                if (response.isSuccessful && response.body() != null) {
-                    val account = response.body()!!
+                        binding.tvSaldoMonto.text = cuenta.getFormattedBalance()
 
-                    binding.tvSaldoMonto.text = account.getFormattedBalance()
-                } else {
-                    binding.tvSaldoMonto.text = "$ 0.00"
-                    binding.tvCuentaDetalle.text = "MXN • Cuenta No Activa"
+                        binding.tvCuentaDetalle.text = "MXN • No. ${cuenta.accountNumber}"
+                    }
+                    is AccountUiState.Error -> {
+                        binding.tvSaldoMonto.text = "$ 0.00"
+                        binding.tvCuentaDetalle.text = "MXN • Error de conexión"
+
+                        Toast.makeText(requireContext(), state.message, Toast.LENGTH_LONG).show()                    }
                 }
-            } catch (e: Exception) {
-                binding.tvSaldoMonto.text = "$ 0.00"
-                binding.tvCuentaDetalle.text = "MXN • Error de conexión"
-                android.util.Log.e("HomeFragment", "Error al mapear saldo de API: ${e.message}")
             }
         }
     }

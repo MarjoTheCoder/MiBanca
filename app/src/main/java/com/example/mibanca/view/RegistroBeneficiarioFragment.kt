@@ -8,13 +8,12 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.example.mibanca.data.repository.BankingRepository // Importación añadida
+import com.example.mibanca.data.repository.BankingRepository
 import com.example.mibanca.databinding.FragmentRegistroBeneficiarioBinding
 import com.example.mibanca.model.AddBeneficiaryRequest
 import com.example.mibanca.model.Beneficiary
-import kotlinx.coroutines.Dispatchers
+import com.example.mibanca.network.apiCall // Importamos el helper unificado de red
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class RegistroBeneficiarioFragment : Fragment() {
     private var _binding: FragmentRegistroBeneficiarioBinding? = null
@@ -33,71 +32,29 @@ class RegistroBeneficiarioFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Leemos si nos mandaron un beneficiario de la lista anterior
         datosRecibidos = arguments?.getSerializable("KEY_BENEFICIARIO") as? Beneficiary
 
         if (datosRecibidos != null) {
-            // LECTURA / EDICIÓN
             binding.tvFormTitle.text = "Detalle del Beneficiario"
             binding.etNombreBeneficiario.setText(datosRecibidos!!.name)
             binding.etApellidoBeneficiario.setText(datosRecibidos!!.lastName)
             binding.etAliasBeneficiario.setText(datosRecibidos!!.alias)
             binding.etBancoBeneficiario.setText(datosRecibidos!!.bankName)
             binding.etCuentaBeneficiario.setText(datosRecibidos!!.accountNumber)
-            binding.btnGuardarBeneficiario.text = "Actualizar información"
-            binding.btnEliminarBeneficiario.visibility = View.VISIBLE
 
-            binding.btnGuardarBeneficiario.setOnClickListener {
-                val nom = binding.etNombreBeneficiario.text.toString().trim()
-                val ape = binding.etApellidoBeneficiario.text.toString().trim()
-                val ali = binding.etAliasBeneficiario.text.toString().trim()
-                val ban = binding.etBancoBeneficiario.text.toString().trim()
-                val cue = binding.etCuentaBeneficiario.text.toString().trim()
+            binding.btnGuardarBeneficiario.visibility = View.GONE
+            binding.btnEliminarBeneficiario.visibility = View.GONE
 
-                if (nom.isEmpty() || ape.isEmpty() || ali.isEmpty() || ban.isEmpty() || cue.isEmpty()) return@setOnClickListener
+            binding.etNombreBeneficiario.isEnabled = false
+            binding.etApellidoBeneficiario.isEnabled = false
+            binding.etAliasBeneficiario.isEnabled = false
+            binding.etBancoBeneficiario.isEnabled = false
+            binding.etCuentaBeneficiario.isEnabled = false
 
-                val request = AddBeneficiaryRequest(name = nom, lastName = ape, alias = ali, accountNumber = cue, bankName = ban)
-
-                viewLifecycleOwner.lifecycleScope.launch {
-                    try {
-                        // REPARADO: Ahora llama a la capa del repositorio
-                        val res = withContext(Dispatchers.IO) {
-                            repository.updateBeneficiary(datosRecibidos!!.id, request)
-                        }
-                        if (res.isSuccessful) {
-                            Toast.makeText(requireContext(), "¡Información actualizada!", Toast.LENGTH_SHORT).show()
-                            findNavController().navigateUp() // Regresa a la lista
-                        } else {
-                            Toast.makeText(requireContext(), "Error del servidor al actualizar", Toast.LENGTH_SHORT).show()
-                        }
-                    } catch (e: Exception) {
-                        Toast.makeText(requireContext(), "Error al actualizar", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }
-
-            binding.btnEliminarBeneficiario.setOnClickListener {
-                viewLifecycleOwner.lifecycleScope.launch {
-                    try {
-                        // REPARADO: Ahora llama a la capa del repositorio
-                        val res = withContext(Dispatchers.IO) {
-                            repository.deleteBeneficiary(datosRecibidos!!.id)
-                        }
-                        if (res.isSuccessful) {
-                            Toast.makeText(requireContext(), "¡Beneficiario eliminado!", Toast.LENGTH_SHORT).show()
-                            findNavController().navigateUp() // Regresa a la lista
-                        } else {
-                            Toast.makeText(requireContext(), "Error del servidor al eliminar", Toast.LENGTH_SHORT).show()
-                        }
-                    } catch (e: Exception) {
-                        Toast.makeText(requireContext(), "Error al eliminar", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }
         } else {
-            // CREACIÓN
             binding.tvFormTitle.text = "Nuevo Beneficiario"
             binding.btnGuardarBeneficiario.text = "Guardar beneficiario"
+            binding.btnGuardarBeneficiario.visibility = View.VISIBLE
             binding.btnEliminarBeneficiario.visibility = View.GONE
 
             binding.btnGuardarBeneficiario.setOnClickListener { guardarNuevoEnAPI() }
@@ -116,30 +73,24 @@ class RegistroBeneficiarioFragment : Fragment() {
             return
         }
 
+        val request = AddBeneficiaryRequest(
+            name = nom,
+            lastName = ape,
+            alias = ali,
+            accountNumber = cue,
+            bankName = ban
+        )
+
         viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                // REPARADO: Se adapta a la firma de 'addBeneficiary' declarada en tu BankingRepository
-                // pasándole los parámetros sueltos en lugar del objeto Request completo.
-                val res = withContext(Dispatchers.IO) {
-                    repository.addBeneficiary(
-                        name = nom,
-                        lastName = ape,
-                        alias = ali,
-                        accountNumber = cue,
-                        bankName = ban
-                    )
-                }
-                if (res.isSuccessful) {
+            apiCall { repository.addBeneficiary(request) } // Le pasamos el objeto completo 'request'
+                .onSuccess { beneficiarioCreado ->
                     Toast.makeText(requireContext(), "¡Beneficiario Agregado!", Toast.LENGTH_SHORT).show()
                     findNavController().navigateUp() // Regresa a la lista
-                } else {
-                    android.util.Log.e("CRUD_ERROR", "Error del servidor: Código ${res.code()} - ${res.errorBody()?.string()}")
-                    Toast.makeText(requireContext(), "Servidor rechazó la petición: ${res.code()}", Toast.LENGTH_SHORT).show()
                 }
-            } catch (e: Exception) {
-                android.util.Log.e("CRUD_ERROR", "Excepción atrapada al guardar: ${e.message}", e)
-                Toast.makeText(requireContext(), "Error de red", Toast.LENGTH_SHORT).show()
-            }
+                .onFailure { error ->
+                    android.util.Log.e("CRUD_ERROR", "Fallo detectado: ${error.message}")
+                    Toast.makeText(requireContext(), "Error al guardar: ${error.message}", Toast.LENGTH_SHORT).show()
+                }
         }
     }
 

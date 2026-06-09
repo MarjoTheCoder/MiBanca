@@ -134,25 +134,28 @@ class CuentaFragment : Fragment() {
                 }
         }
 
+        // REPARACIÓN COMPLETA: Usamos apiCall para recibir directamente AccountResponse
         viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                val response = withContext(Dispatchers.IO) {
-                    com.example.mibanca.di.NetworkModule.apiService.getAccount()
-                }
-                if (response.isSuccessful && response.body() != null) {
-                    val account = response.body()!!
-                    binding.tvTitle.text = "Mi cuenta (${account.getFormattedBalance()})"
-                } else {
-                    Toast.makeText(requireContext(), "Error API (${response.code()}): No se obtuvo el saldo", Toast.LENGTH_SHORT).show()
-                }
-            } catch (e: Exception) {
-                Toast.makeText(requireContext(), "Error de red al conectar al servidor: ${e.message}", Toast.LENGTH_SHORT).show()
+            com.example.mibanca.network.apiCall {
+                com.example.mibanca.di.NetworkModule.apiService.getAccount()
             }
+                .onSuccess { account ->
+                    // ¡Éxito! Imprimimos de inmediato el saldo formateado de forma nativa
+                    binding.tvTitle.text = "Mi cuenta (${account.getFormattedBalance()})"
+                }
+                .onFailure { error ->
+                    // Si la cuenta no existe o hay falla de red, apiCall captura el error de forma segura aquí
+                    binding.tvTitle.text = "Mi cuenta ($ 0.00)"
+                    Toast.makeText(
+                        requireContext(),
+                        "No se pudo sincronizar el saldo: ${error.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
         }
 
         cargarFotoEnAvatar("https://api.dicebear.com/7.x/avataaars/svg?seed=Maria")
     }
-
     private fun cargarFotoEnAvatar(anySource: Any) {
         Glide.with(this)
             .load(anySource)
@@ -183,7 +186,6 @@ class CuentaFragment : Fragment() {
     }
 
     private fun verificarYPedirPermisoGaleria() {
-        // Determina qué permiso pedir dependiendo de la versión de Android instalada en el cel
         val permisoNecesario = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             Manifest.permission.READ_MEDIA_IMAGES // Android 13+
         } else {
@@ -191,10 +193,8 @@ class CuentaFragment : Fragment() {
         }
 
         if (ContextCompat.checkSelfPermission(requireContext(), permisoNecesario) == PackageManager.PERMISSION_GRANTED) {
-            // Si ya lo aceptó antes, abre la galería directamente
             abrirGaleriaLauncher.launch("image/*")
         } else {
-            // Si no, lanza el cuadro de diálogo oficial del sistema para preguntar
             permisoGaleriaLauncher.launch(permisoNecesario)
         }
     }

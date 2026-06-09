@@ -2,83 +2,69 @@ package com.example.mibanca.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.mibanca.data.repository.BankingRepository
+import com.example.mibanca.data.repository.BankingRepositoryImpl
 import com.example.mibanca.di.NetworkModule
-import com.example.mibanca.model.FundRequest
-import com.example.mibanca.model.TransactionRequest
-import com.example.mibanca.model.ApiErrorBody
-import com.google.gson.Gson
-import kotlinx.coroutines.Dispatchers
+import com.example.mibanca.model.AccountResponse
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import retrofit2.Response
-import okhttp3.ResponseBody
 
-class BankingViewModel : ViewModel() {
+// --- 1. ESTADOS PARA EL HOMEFRAGMENT ---
+sealed class AccountUiState {
+    object Loading : AccountUiState()
+    data class Success(val account: AccountResponse) : AccountUiState()
+    data class Error(val message: String) : AccountUiState()
+}
 
+// ⚠️ NOTA: ELIMINAMOS EL BLOQUE DE 'OperationUiState' DE AQUÍ
+// PORQUE YA EXISTE EN SU PROPIO ARCHIVO 'OperationUiState.kt'
+
+class BankingViewModel(
+    private val repository: BankingRepository = BankingRepositoryImpl(NetworkModule.apiService)
+) : ViewModel() {
+
+    // Canal del Home (Cuenta)
+    private val _accountState = MutableStateFlow<AccountUiState>(AccountUiState.Loading)
+    val accountState: StateFlow<AccountUiState> = _accountState.asStateFlow()
+
+    // Canal de la Transferencia (Utiliza el OperationUiState del archivo original)
     private val _uiState = MutableStateFlow<OperationUiState>(OperationUiState.Idle)
-    val uiState: StateFlow<OperationUiState> = _uiState
+    val uiState: StateFlow<OperationUiState> = _uiState.asStateFlow()
 
-    private val apiService = NetworkModule.apiService
-    private val gson = Gson()
+    init {
+        obtenerDatosDeCuenta()
+    }
 
-    fun transferir(beneficiaryId: String, amountInCents: Long, concepto: String?) {
-        _uiState.value = OperationUiState.Loading
-
+    // Método para traer saldo y tarjetas
+    fun obtenerDatosDeCuenta() {
         viewModelScope.launch {
+            _accountState.value = AccountUiState.Loading
             try {
-                val request = TransactionRequest(
-                    toBeneficiaryId = beneficiaryId,
-                    amount = amountInCents,
-                    description = if (concepto.isNullOrBlank()) null else concepto
-                )
-
-                val response = withContext(Dispatchers.IO) {
-                    apiService.makeTransfer(request)
-                }
-
-                procesarRespuesta(response, "¡Transferencia realizada con éxito!")
+                val account = NetworkModule.apiService.getAccount()
+                _accountState.value = AccountUiState.Success(account)
             } catch (e: Exception) {
-                _uiState.value = OperationUiState.Error("Error de red: ${e.localizedMessage ?: "Conexión inestable"}")
+                _accountState.value = AccountUiState.Error(e.message ?: "Error desconocido de red")
             }
         }
     }
 
-    fun fondearCuenta(amountInCents: Long) {
-        _uiState.value = OperationUiState.Loading
-
+    // Método para mover dinero
+    fun transferir(targetAccountId: String, amountInCents: Long, concepto: String) {
         viewModelScope.launch {
+            _uiState.value = OperationUiState.Loading
             try {
-                val request = FundRequest(amount = amountInCents)
-                val response = withContext(Dispatchers.IO) {
-                    apiService.fundAccount(request)
+                val response = repository.makeTransfer(targetAccountId, amountInCents)
+                if (response.isSuccessful) {
+                    _uiState.value = OperationUiState.Success
+                    obtenerDatosDeCuenta() // Actualiza saldo del Home tras transferir
+                } else {
+                    _uiState.value = OperationUiState.Error("Error en el servidor al transferir")
                 }
-
-                procesarRespuesta(response, "¡Fondeo exitoso!")
             } catch (e: Exception) {
-                _uiState.value = OperationUiState.Error("Error de conexión: ${e.localizedMessage}")
+                _uiState.value = OperationUiState.Error("Fallo de red: ${e.message}")
             }
-        }
-    }
-
-    private fun procesarRespuesta(response: Response<ResponseBody>, mensajeExito: String) {
-        if (response.isSuccessful) {
-            _uiState.value = OperationUiState.Success
-        } else {
-            val errorBodyString = response.errorBody()?.string()
-            val errorMessage = parsearErrorApi(errorBodyString, response.code())
-            _uiState.value = OperationUiState.Error(errorMessage)
-        }
-    }
-
-    private fun parsearErrorApi(errorBodyStr: String?, statusCode: Int): String {
-        if (errorBodyStr.isNullOrEmpty()) return "Error del servidor ($statusCode)"
-        return try {
-            val apiError = gson.fromJson(errorBodyStr, ApiErrorBody::class.java)
-            apiError.message // Retorna la descripción legible en español provista por la API (Pág. 2)
-        } catch (e: Exception) {
-            "Error inesperado ($statusCode)"
         }
     }
 

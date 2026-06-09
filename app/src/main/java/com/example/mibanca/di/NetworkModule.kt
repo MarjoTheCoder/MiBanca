@@ -9,8 +9,7 @@ import java.util.concurrent.TimeUnit
 
 object NetworkModule {
 
-    private const val BASE_URL = "https://us-central1-bankapp-e47b0.cloudfunctions.net/api/"
-
+    private const val BASE_URL = "https://api-paoxql37vq-uc.a.run.app/"
     private val okHttpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
             .addInterceptor(AuthInterceptor())

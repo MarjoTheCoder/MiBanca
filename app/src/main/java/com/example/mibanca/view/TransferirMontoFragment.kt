@@ -4,7 +4,7 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
-import         android.view.View
+import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -16,6 +16,7 @@ import com.example.mibanca.databinding.FragmentTransferirMontoBinding
 import com.example.mibanca.viewmodel.BankingViewModel
 import com.example.mibanca.viewmodel.OperationUiState
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.collect // <-- CRUCIAL para solucionar el 'Cannot infer type'
 
 class TransferirMontoFragment : Fragment() {
 
@@ -23,7 +24,6 @@ class TransferirMontoFragment : Fragment() {
     private val binding get() = _binding!!
 
     private var beneficiaryId: String? = null
-
     private val viewModel: BankingViewModel by viewModels()
 
     override fun onCreateView(
@@ -56,11 +56,8 @@ class TransferirMontoFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.uiState.collect { state ->
                 when (state) {
-                    is OperationUiState.Idle -> {
-                        // Estado base pasivo
-                    }
+                    is OperationUiState.Idle -> {}
                     is OperationUiState.Loading -> {
-                        // Se activa el indicador de carga diseñado por Lisset
                         binding.progressIndicator.visibility = View.VISIBLE
                         binding.btnTransferir.isEnabled = false
                         binding.btnTransferir.text = "Procesando..."
@@ -75,7 +72,6 @@ class TransferirMontoFragment : Fragment() {
                         binding.progressIndicator.visibility = View.GONE
                         Toast.makeText(requireContext(), state.message, Toast.LENGTH_LONG).show()
 
-                        // Restauramos el botón con el monto actual en pantalla
                         val montoText = binding.etMonto.text.toString().trim()
                         val montoDouble = montoText.toDoubleOrNull() ?: 0.0
                         binding.btnTransferir.isEnabled = montoDouble > 0
@@ -91,7 +87,7 @@ class TransferirMontoFragment : Fragment() {
     private fun configurarComponentesVisuales() {
         binding.tvNombreBeneficiario.text = "Beneficiario verificado"
         binding.tvSaldoDisponible.text = "Saldo disponible: $12,450.75"
-        binding.progressIndicator.visibility = View.GONE // Oculto inicialmente
+        binding.progressIndicator.visibility = View.GONE
     }
 
     private fun configurarChipsSugeridos() {

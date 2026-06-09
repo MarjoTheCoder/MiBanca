@@ -10,12 +10,14 @@ import androidx.navigation.fragment.findNavController
 import com.example.mibanca.R
 import com.example.mibanca.databinding.FragmentBeneficiariosBinding
 import com.example.mibanca.model.Beneficiary
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import com.example.mibanca.adapter.BeneficiariosAdapter
+import com.example.mibanca.network.apiCall
 import android.text.TextWatcher
 import android.text.Editable
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import com.example.mibanca.network.apiCall
+
 class BeneficiariosFragment : Fragment() {
     private var _binding: FragmentBeneficiariosBinding? = null
     private val binding get() = _binding!!
@@ -40,35 +42,31 @@ class BeneficiariosFragment : Fragment() {
 
     private fun cargarBeneficiariosDesdeAPI() {
         viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                val response = withContext(Dispatchers.IO) {
-                    com.example.mibanca.di.NetworkModule.apiService.getBeneficiaries()
-                }
 
-                val datosApi = response.body()
-                if (response.isSuccessful && !datosApi.isNullOrEmpty()) {
-                    binding.rvBeneficiarios.visibility = View.VISIBLE
-                    binding.layoutEmptyBeneficiarios.visibility = View.GONE
+            apiCall { com.example.mibanca.di.NetworkModule.apiService.getBeneficiaries() }
+                .onSuccess { datosApi ->
+                    if (!datosApi.isNullOrEmpty()) {
+                        binding.rvBeneficiarios.visibility = View.VISIBLE
+                        binding.layoutEmptyBeneficiarios.visibility = View.GONE
 
-                    listaCompleta.clear()
-                    listaCompleta.addAll(datosApi)
+                        listaCompleta.clear()
+                        listaCompleta.addAll(datosApi)
 
-                    beneficiariosAdapter = BeneficiariosAdapter(datosApi.toMutableList()) { click ->
-                        irAFormulario(click)
+                        beneficiariosAdapter = BeneficiariosAdapter(datosApi.toMutableList()) { click ->
+                            irAFormulario(click)
+                        }
+                        binding.rvBeneficiarios.adapter = beneficiariosAdapter
+
+                        binding.etSearch.text?.clear()
+                    } else {
+                        mostrarPantallaVacia()
                     }
-                    binding.rvBeneficiarios.adapter = beneficiariosAdapter
-
-                    binding.etSearch.text?.clear()
-
-                } else {
+                }
+                .onFailure { error ->
                     mostrarPantallaVacia()
                 }
-            } catch (e: Exception) {
-                mostrarPantallaVacia()
-            }
         }
     }
-
     private fun configurarBuscador() {
         binding.etSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -84,7 +82,6 @@ class BeneficiariosFragment : Fragment() {
         if (!::beneficiariosAdapter.isInitialized) return
 
         if (query.isEmpty()) {
-            // Si se borra el texto, regresamos la lista original guardada en memoria
             beneficiariosAdapter.filtrarLista(listaCompleta)
             binding.rvBeneficiarios.visibility = View.VISIBLE
             binding.layoutEmptyBeneficiarios.visibility = View.GONE

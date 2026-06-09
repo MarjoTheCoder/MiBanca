@@ -9,25 +9,14 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.mibanca.R
-import com.example.mibanca.model.AccountResponse
-import com.example.mibanca.network.BankApiService
-import com.example.mibanca.network.FundAccountRequest
-import kotlinx.coroutines.Dispatchers
+import com.example.mibanca.di.NetworkModule
+import com.example.mibanca.model.FundRequest
+import com.example.mibanca.network.apiCall
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 
 class FondeoFragment : Fragment(R.layout.fragment_fondeo) {
 
-    private val apiService: BankApiService by lazy {
-        Retrofit.Builder()
-            // NOTA: Cambiar esta URL por la URL real del Mocki
-            .baseUrl("https://us-central1-bankapp-e47b0.cloudfunctions.net/")
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-            .create(BankApiService::class.java)
-    }
+    private val apiService = NetworkModule.apiService
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -56,14 +45,8 @@ class FondeoFragment : Fragment(R.layout.fragment_fondeo) {
 
     private fun ejecutarFondeo(montoCentavos: Long) {
         lifecycleScope.launch {
-            try {
-                val response = withContext(Dispatchers.IO) {
-                    apiService.fundAccount(FundAccountRequest(montoCentavos))
-                }
-
-                if (response.isSuccessful && response.body() != null) {
-                    val cuentaActualizada: AccountResponse = response.body()!!
-
+            apiCall { apiService.fundAccount(FundRequest(montoCentavos)) }
+                .onSuccess { cuentaActualizada ->
                     Toast.makeText(
                         requireContext(),
                         "¡Fondeo exitoso! Nuevo saldo: ${cuentaActualizada.getFormattedBalance()}",
@@ -71,12 +54,14 @@ class FondeoFragment : Fragment(R.layout.fragment_fondeo) {
                     ).show()
 
                     findNavController().popBackStack()
-                } else {
-                    Toast.makeText(requireContext(), "Error en el servidor al fondear", Toast.LENGTH_SHORT).show()
                 }
-            } catch (e: Exception) {
-                Toast.makeText(requireContext(), "Error de red: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
+                .onFailure { error ->
+                    Toast.makeText(
+                        requireContext(),
+                        "Error al procesar fondeo: ${error.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
         }
     }
 }
