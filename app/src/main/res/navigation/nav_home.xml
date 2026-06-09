@@ -32,7 +32,13 @@
         android:id="@+id/navigation_beneficiarios"
         android:name="com.example.mibanca.view.BeneficiariosFragment"
         android:label="Beneficiarios"
-        tools:layout="@layout/fragment_beneficiarios" />
+        tools:layout="@layout/fragment_beneficiarios">
+
+        <action
+            android:id="@+id/action_beneficiarios_to_transferirMonto"
+            app:destination="@id/transferirMontoFragment" />
+
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_cuenta"
