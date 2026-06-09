@@ -1,60 +1,114 @@
 package com.example.mibanca.view
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.mibanca.R
+import com.example.mibanca.data.repository.BankingRepository
+import com.example.mibanca.databinding.FragmentTransferirSeleccionBinding
+import com.example.mibanca.network.apiCall
+import kotlinx.coroutines.launch
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [TransferirSeleccionFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class TransferirSeleccionFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
+    private var _binding: FragmentTransferirSeleccionBinding? = null
+    private val binding get() = _binding!!
+
+    // Inicializamos el repositorio conectado a la API v2
+    private val repository: BankingRepository = com.example.mibanca.data.repository.BankingRepositoryImpl(
+        com.example.mibanca.di.NetworkModule.apiService
+    )
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_transferir_seleccion, container, false)
+    ): View {
+        _binding = FragmentTransferirSeleccionBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment TransferirSeleccionFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            TransferirSeleccionFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        setupClickListeners()
+        configurarRecyclerView()
+        cargarBeneficiariosDesdeAPI()
+    }
+
+    private fun setupClickListeners() {
+        binding.btnBack.setOnClickListener {
+            findNavController().navigateUp()
+        }
+
+        binding.cardAddNuevo.setOnClickListener {
+            findNavController().navigate(R.id.fragment_registro_beneficiario)
+        }
+    }
+    private fun configurarRecyclerView() {
+        // CORREGIDO: Usamos el ID exacto de tu XML 'rvBeneficiariosSelector'
+        binding.rvBeneficiariosSelector.layoutManager = LinearLayoutManager(requireContext())
+    }
+
+    private fun cargarBeneficiariosDesdeAPI() {
+        // Activamos la barra de progreso mientras se descargan los datos
+        binding.progressIndicator.visibility = View.VISIBLE
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            apiCall { repository.getBeneficiaries() }
+                .onSuccess { listaBeneficiarios ->
+                    binding.progressIndicator.visibility = View.GONE
+
+                    if (listaBeneficiarios.isEmpty()) {
+                        // Si no hay datos, mostramos el layout vacío que diseñaste
+                        binding.rvBeneficiariosSelector.visibility = View.GONE
+                        binding.layoutEmptySelector.visibility = View.VISIBLE
+                    } else {
+                        // Si hay datos, aseguramos que la lista se vea y ocultamos lo vacío
+                        binding.rvBeneficiariosSelector.visibility = View.VISIBLE
+                        binding.layoutEmptySelector.visibility = View.GONE
+
+                        // 🚀 CONEXIÓN CON EL ADAPTER:
+                        // Busca en tu proyecto cómo se llama tu adaptador (ej. BeneficiaryAdapter).
+                        // Descomenta las líneas de abajo y pon el tuyo:
+
+                        /*
+                        val adapter = BeneficiaryAdapter(listaBeneficiarios) { beneficiario ->
+                            // Al tocar un beneficiario, guardamos su información y avanzamos al paso 2 (Monto)
+                            val bundle = Bundle().apply {
+                                putSerializable("KEY_BENEFICIARIO", beneficiario)
+                            }
+                            findNavController().navigate(R.id.action_transferirSeleccionFragment_to_transferirMontoFragment, bundle)
+                        }
+                        binding.rvBeneficiariosSelector.adapter = adapter
+                        */
+
+                        // Aviso temporal en lo que vinculas el nombre de tu Adapter exacto:
+                        Toast.makeText(
+                            requireContext(),
+                            "¡Conectado! Cargados ${listaBeneficiarios.size} beneficiarios.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
-            }
+                .onFailure { error ->
+                    binding.progressIndicator.visibility = View.GONE
+                    Toast.makeText(
+                        requireContext(),
+                        "Error en el servidor: ${error.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

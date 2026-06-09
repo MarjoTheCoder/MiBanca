@@ -25,6 +25,10 @@ class BeneficiariosFragment : Fragment() {
     private val listaCompleta = mutableListOf<Beneficiary>()
     private lateinit var beneficiariosAdapter: BeneficiariosAdapter
 
+    private val repository = com.example.mibanca.data.repository.BankingRepositoryImpl(
+        com.example.mibanca.di.NetworkModule.apiService
+    )
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?): View {
         _binding = FragmentBeneficiariosBinding.inflate(inflater, container, false)
         return binding.root
@@ -41,32 +45,42 @@ class BeneficiariosFragment : Fragment() {
     }
 
     private fun cargarBeneficiariosDesdeAPI() {
-        viewLifecycleOwner.lifecycleScope.launch {
 
-            apiCall { com.example.mibanca.di.NetworkModule.apiService.getBeneficiaries() }
-                .onSuccess { datosApi ->
-                    if (!datosApi.isNullOrEmpty()) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            apiCall<List<com.example.mibanca.model.Beneficiary>> { repository.getBeneficiaries() }
+                .onSuccess { listaRecibida ->
+                    binding.progressIndicator.visibility = View.GONE
+
+                    val listaMutable = listaRecibida.toMutableList()
+                    listaCompleta.clear()
+                    listaCompleta.addAll(listaMutable)
+
+                    if (listaMutable.isEmpty()) {
+                        binding.rvBeneficiarios.visibility = View.GONE
+                        binding.layoutEmptyBeneficiarios.visibility = View.VISIBLE
+                    } else {
                         binding.rvBeneficiarios.visibility = View.VISIBLE
                         binding.layoutEmptyBeneficiarios.visibility = View.GONE
 
-                        listaCompleta.clear()
-                        listaCompleta.addAll(datosApi)
-
-                        beneficiariosAdapter = BeneficiariosAdapter(datosApi.toMutableList()) { click ->
-                            irAFormulario(click)
+                        val adapter = com.example.mibanca.adapter.BeneficiariosAdapter(listaMutable) { beneficiario ->
+                            val bundle = Bundle().apply {
+                                putString("beneficiaryId", beneficiario.id)
+                            }
+                            findNavController().navigate(
+                                R.id.action_transferirSeleccionFragment_to_transferirMontoFragment,
+                                bundle
+                            )
                         }
-                        binding.rvBeneficiarios.adapter = beneficiariosAdapter
-
-                        binding.etSearch.text?.clear()
-                    } else {
-                        mostrarPantallaVacia()
+                        binding.rvBeneficiarios.adapter = adapter
+                        beneficiariosAdapter = adapter //
                     }
                 }
                 .onFailure { error ->
-                    mostrarPantallaVacia()
+                    android.widget.Toast.makeText(requireContext(), "Error: ${error.message}", android.widget.Toast.LENGTH_LONG).show()
                 }
         }
     }
+
     private fun configurarBuscador() {
         binding.etSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
