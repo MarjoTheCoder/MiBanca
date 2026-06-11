@@ -33,8 +33,12 @@ class BankingRepositoryImpl(
         return apiService.makeTransfer(request)
     }
 
-    // 🔥 USAMOS ESTA FUNCIÓN, QUE YA ESTABA CREADA POR USTEDES
     override suspend fun getTransactionHistory(): List<Transaction> {
         return apiService.getTransactionHistory()
     }
+
+    override suspend fun deleteBeneficiary(id: String): Response<Unit> {
+        return apiService.deleteBeneficiary(id)
+    }
+
 }

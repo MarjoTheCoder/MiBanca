@@ -12,6 +12,6 @@ data class Transaction(
     @SerializedName("fromAccount") val fromAccount: String? = ""
 ) {
     fun getFormattedAmount(): String {
-        return String.format("$%.2f", amountInCents / 100.0)
+        return String.format("$%d", amountInCents)
     }
 }

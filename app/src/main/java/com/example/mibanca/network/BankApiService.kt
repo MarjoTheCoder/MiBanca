@@ -11,6 +11,9 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
+import retrofit2.http.DELETE
+import retrofit2.http.Path
+
 
 interface BankApiService {
     @GET("account")
@@ -33,4 +36,7 @@ interface BankApiService {
 
     @GET("transaction")
     suspend fun getTransactionHistory(): List<Transaction>
+
+    @DELETE("beneficiaries/{id}")
+    suspend fun deleteBeneficiary(@Path("id") id: String): Response<Unit>
 }

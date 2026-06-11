@@ -43,13 +43,17 @@ class RegistroBeneficiarioFragment : Fragment() {
             binding.etCuentaBeneficiario.setText(datosRecibidos!!.accountNumber)
 
             binding.btnGuardarBeneficiario.visibility = View.GONE
-            binding.btnEliminarBeneficiario.visibility = View.GONE
+            binding.btnEliminarBeneficiario.visibility = View.VISIBLE
 
             binding.etNombreBeneficiario.isEnabled = false
             binding.etApellidoBeneficiario.isEnabled = false
             binding.etAliasBeneficiario.isEnabled = false
             binding.etBancoBeneficiario.isEnabled = false
             binding.etCuentaBeneficiario.isEnabled = false
+
+            binding.btnEliminarBeneficiario.setOnClickListener {
+                eliminarBeneficiarioDeAPI(datosRecibidos!!.id)
+            }
 
         } else {
             binding.tvFormTitle.text = "Nuevo Beneficiario"
@@ -82,15 +86,32 @@ class RegistroBeneficiarioFragment : Fragment() {
         )
 
         viewLifecycleOwner.lifecycleScope.launch {
-            apiCall { repository.addBeneficiary(request) } // Le pasamos el objeto completo 'request'
+            apiCall { repository.addBeneficiary(request) }
                 .onSuccess { beneficiarioCreado ->
                     Toast.makeText(requireContext(), "¡Beneficiario Agregado!", Toast.LENGTH_SHORT).show()
-                    findNavController().navigateUp() // Regresa a la lista
+                    findNavController().navigateUp()
                 }
                 .onFailure { error ->
                     android.util.Log.e("CRUD_ERROR", "Fallo detectado: ${error.message}")
                     Toast.makeText(requireContext(), "Error al guardar: ${error.message}", Toast.LENGTH_SHORT).show()
                 }
+        }
+    }
+
+    private fun eliminarBeneficiarioDeAPI(idBeneficiario: String) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val response = repository.deleteBeneficiary(idBeneficiario)
+                if (response.isSuccessful) {
+                    Toast.makeText(requireContext(), "¡Beneficiario eliminado con éxito!", Toast.LENGTH_SHORT).show()
+                    findNavController().navigateUp()
+                } else {
+                    Toast.makeText(requireContext(), "El servidor rechazó la eliminación", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("CRUD_ERROR", "Error al borrar: ${e.message}")
+                Toast.makeText(requireContext(), "Fallo de red al eliminar", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
