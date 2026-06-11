@@ -15,8 +15,13 @@ import com.example.mibanca.HomeActivity
 import com.example.mibanca.databinding.FragmentPersonalDataBinding
 import com.example.mibanca.viewmodel.AuthViewModel
 import com.google.android.material.datepicker.MaterialDatePicker
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class PersonalDataFragment : Fragment() {
 
@@ -24,6 +29,10 @@ class PersonalDataFragment : Fragment() {
     private val binding get() = _binding!!
 
     private lateinit var authViewModel: AuthViewModel
+
+    // Instancias de Firebase
+    private val firebaseAuth = FirebaseAuth.getInstance()
+    private val firestore = FirebaseFirestore.getInstance()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -37,10 +46,6 @@ class PersonalDataFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         authViewModel = ViewModelProvider(this).get(AuthViewModel::class.java)
-
-        binding.btnBack.setOnClickListener {
-            findNavController().navigateUp()
-        }
 
         setupListeners()
         setupTextWatchers()
@@ -56,11 +61,66 @@ class PersonalDataFragment : Fragment() {
         }
 
         binding.btnContinuar.setOnClickListener {
-            Toast.makeText(requireContext(), "Perfil completado", Toast.LENGTH_SHORT).show()
-            goToHome()
+            guardarDatosEnFirestore()
         }
     }
 
+    private fun guardarDatosEnFirestore() {
+        val userId = firebaseAuth.currentUser?.uid
+        if (userId == null) {
+            Toast.makeText(requireContext(), "Error: No hay usuario autenticado", Toast.LENGTH_SHORT).show()
+            return
+        }
+        binding.btnContinuar.isEnabled = false
+
+        val nombre = binding.etNombre.text.toString().trim()
+        val apellidos = binding.etApellidos.text.toString().trim()
+        val celular = binding.etCelular.text.toString().trim()
+        val fechaNacimiento = binding.etFechaNacimiento.text.toString().trim()
+
+        val userProfile = hashMapOf(
+            "uid" to userId,
+            "firstName" to nombre,
+            "lastName" to apellidos,
+            "fullName" to "$nombre $apellidos",
+            "phone" to celular,
+            "birthdate" to fechaNacimiento
+        )
+
+        firestore.collection("users")
+            .document(userId)
+            .set(userProfile)
+            .addOnSuccessListener {
+                viewLifecycleOwner.lifecycleScope.launch {
+                    // SOLUCIÓN COMPLETA: Usamos apiCall para envolver la petición directa.
+                    // Esto elimina por completo los errores de .isSuccessful y .code()
+                    com.example.mibanca.network.apiCall {
+                        com.example.mibanca.di.NetworkModule.apiService.createAccount()
+                    }
+                        .onSuccess { account ->
+                            // Si entra aquí, la cuenta bancaria se creó perfectamente por primera vez
+                            Toast.makeText(requireContext(), "¡Cuenta bancaria creada con éxito!", Toast.LENGTH_SHORT).show()
+                            goToHome()
+                        }
+                        .onFailure { error ->
+                            // Si falla, apiCall nos da el error. Evaluamos el mensaje o tipo para saber si es un 409 (Conflict)
+                            // De acuerdo a la guía del profesor, si ya tenía cuenta de una sesión anterior, redirigimos a Home de forma segura.
+                            if (error.message?.contains("409") == true || error.message?.contains("account_exists") == true) {
+                                Toast.makeText(requireContext(), "Aviso: Ya posees una cuenta activa.", Toast.LENGTH_LONG).show()
+                                goToHome()
+                            } else {
+                                // Cualquier otro fallo de red auténtico
+                                binding.btnContinuar.isEnabled = true
+                                Toast.makeText(requireContext(), "Error al crear cuenta: ${error.message}", Toast.LENGTH_LONG).show()
+                            }
+                        }
+                }
+            }
+            .addOnFailureListener { exception ->
+                binding.btnContinuar.isEnabled = true
+                Toast.makeText(requireContext(), "Error en Firestore: ${exception.message}", Toast.LENGTH_LONG).show()
+            }
+    }
     private fun showDatePicker() {
         val picker = MaterialDatePicker.Builder.datePicker()
             .setTitleText("Fecha de nacimiento")
