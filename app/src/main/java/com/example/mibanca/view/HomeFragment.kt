@@ -16,6 +16,9 @@ import com.example.mibanca.viewmodel.BankingViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.mibanca.adapter.MovimientosAdapter
+import com.example.mibanca.viewmodel.TransactionsUiState
 
 class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
@@ -37,13 +40,39 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // 1. Configurar el RecyclerView (¡Esto faltaba!)
+        binding.rvMovimientos.layoutManager = LinearLayoutManager(requireContext())
+
         cargarNombreFirestore()
         setupClickListeners()
         observarEstadoDeCuenta()
 
+        // 2. ¡Llamar a la carga de movimientos!
         viewModel.obtenerDatosDeCuenta()
+        viewModel.obtenerHistorialMovimientos() // Asegúrate de que este método exista en tu ViewModel
+
+        // 3. Observar los movimientos
+        observarMovimientos()
     }
 
+    private fun observarMovimientos() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.transactionsState.collect { state ->
+                when (state) {
+                    is TransactionsUiState.Success -> {
+                        if (state.transactions.isNotEmpty()) {
+                            binding.layoutEmptyMovimientos.visibility = View.GONE // <--- OCÚLTALO
+                            binding.rvMovimientos.adapter = MovimientosAdapter(state.transactions)
+                            binding.rvMovimientos.visibility = View.VISIBLE
+                        }
+                    }                    is TransactionsUiState.Error -> {
+                        Toast.makeText(requireContext(), "Error: ${state.message}", Toast.LENGTH_SHORT).show()
+                    }
+                    else -> { /* Loading */ }
+                }
+            }
+        }
+    }
     private fun setupClickListeners() {
         binding.btnTransferir.setOnClickListener {
             findNavController().navigate(R.id.action_navigation_home_to_transferirSeleccionFragment)
